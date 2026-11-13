@@ -37,7 +37,8 @@ h1{font-size:clamp(20px,2.6vw,27px);font-weight:500;margin:0;text-wrap:balance;l
 .ctl{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft)}
 .ctl b{font-weight:700;color:var(--ink);font-size:20px;font-variant-numeric:tabular-nums;min-width:4.2em}
 .ctl b small{font-size:11px;font-weight:500;color:var(--ink-soft);margin-left:2px}
-input[type=range]{width:min(260px,46vw);accent-color:var(--accent)}
+input[type=range]{width:min(260px,46vw);min-width:0;flex:1 1 120px;accent-color:var(--accent)}
+button{white-space:nowrap}
 button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--ink-faint);border-radius:6px;padding:4px 12px;cursor:pointer}
 button:hover,select:hover{border-color:var(--ink-soft)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -45,8 +46,27 @@ button:hover,select:hover{border-color:var(--ink-soft)}
 .seg button{border:0;border-radius:0;padding:4px 14px}
 .seg button + button{border-left:1px solid var(--ink-faint)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.chart{overflow-x:auto}
-svg{display:block;width:100%;min-width:860px;height:auto;font-family:var(--font)}
+.chartwrap{position:relative;display:flex;flex-direction:column;gap:14px}
+.chart{overflow:hidden}
+.flow{stroke-linejoin:round}
+.legends{display:flex;flex-wrap:wrap;gap:12px 32px}
+.lg h3{font-size:13px;margin:0;font-weight:700;line-height:1.4}
+.lg p{font-size:10.5px;color:var(--ink-soft);margin:0 0 5px;line-height:1.35}
+#lgflow{display:block;width:120px;height:74px}
+#lgflow text{font-size:10px;fill:var(--ink-soft)}
+#lgband{display:flex;flex-wrap:wrap;gap:3px 4px;max-width:520px}
+.lgb{border:0;background:none;padding:2px 7px 2px 3px;font-size:10.5px;display:inline-flex;align-items:center;gap:6px;border-radius:4px;line-height:1.3;white-space:nowrap}
+.lgb i{width:22px;height:10px;display:inline-block;border:1px solid transparent;flex:none}
+.lgb[aria-pressed="true"]{font-weight:700;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.bandsel .lgb[aria-pressed="false"]{opacity:.4}
+.wide .legends{display:contents}
+.wide .lg{position:absolute;right:0;width:186px;z-index:1}
+.wide .lg-flow{top:6px}
+.wide .lg-band{bottom:4px}
+.wide #lgband{flex-direction:column;flex-wrap:nowrap;gap:0;align-items:flex-start}
+.wide .lgb{padding:0 7px 0 3px;font-size:10px;line-height:1.3}
+.vert .ind .name{font-size:11.5px}
+svg{display:block;width:100%;height:auto;font-family:var(--font)}
 .flow{fill:none;stroke:var(--flow);transition:stroke .2s,opacity .2s}
 .dim .flow{opacity:.45}
 .ind.on .flow{stroke:var(--flow-hi);opacity:1}
@@ -63,19 +83,13 @@ svg{display:block;width:100%;min-width:860px;height:auto;font-family:var(--font)
 .ind.on .cnt{opacity:1}
 .hit{fill:transparent;cursor:pointer}
 .sexlabel{font-size:30px;fill:var(--ink-faint);letter-spacing:.08em}
-.lg-title{font-size:13px;font-weight:700;fill:var(--ink)}
-.lg-sub{font-size:10px;fill:var(--ink-soft)}
-.lg-row text{font-size:9.5px;fill:var(--ink);font-weight:500}
-.lg-row{cursor:pointer}
-.lg-row.sel text{font-weight:700}
-.bandsel .lg-row:not(.sel){opacity:.35}
 #tip{position:fixed;z-index:5;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.14);padding:12px 14px;width:270px;font-size:12px;opacity:0;transition:opacity .12s}
 #tip.show{opacity:1}
 #tip.pinned{pointer-events:auto}
 #tipclose{display:none;position:absolute;top:6px;right:6px;width:32px;height:32px;padding:0;border-radius:16px;font-size:18px;line-height:1}
 #tip.pinned #tipclose{display:block}
 #tip.pinned h2{padding-right:34px}
-@media (max-width:700px){#tip{left:8px !important;right:8px;top:auto !important;bottom:8px;width:auto;max-height:70vh;overflow:auto}}
+#tip.sheet{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:70vh;overflow:auto}
 #tip h2{font-size:14px;margin:0 0 6px;font-weight:700;line-height:1.35}
 #tip dl{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:0 0 8px;font-variant-numeric:tabular-nums}
 #tip dt{color:var(--ink-soft)} #tip dd{margin:0;text-align:right}
@@ -109,9 +123,15 @@ footer a{color:inherit}
     <div class="ctl"><label for="sort">並び順</label>
       <select id="sort"><option value="orig">元の作品の並び</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
   </div>
-  <div class="chart"><svg id="svg" viewBox="0 0 1200 810" role="img" aria-label="業種別の就労人数（男女別）と給与階級別の構成"></svg></div>
+  <div class="chartwrap">
+    <div class="legends">
+      <div class="lg lg-flow"><h3>業種ごとの就労人数</h3><p>勤めている人数・男女別（線の太さ）</p><svg id="lgflow" viewBox="0 0 120 74" aria-hidden="true"></svg></div>
+      <div class="lg lg-band"><h3>業種ごとの給与レンジ</h3><p>そのレンジで給与をもらっている人数（業種内での割合）</p><div id="lgband" role="group" aria-label="給与レンジ"></div></div>
+    </div>
+    <div class="chart"><svg id="svg" viewBox="0 0 1200 810" role="img" aria-label="業種別の就労人数（男女別）と給与階級別の構成"></svg></div>
+  </div>
   <footer>
-    <span>業種にカーソルを合わせる（タップする）と内訳が出ます。内訳は×ボタンか、パネルの外をタップすると閉じます。右下の凡例でレンジを選ぶと、全業種でそのレンジの割合を比べられます。</span>
+    <span>業種にカーソルを合わせる（タップする）と内訳が出ます。内訳は×ボタンか、パネルの外をタップすると閉じます。凡例でレンジを選ぶと、全業種でそのレンジの割合を比べられます。</span>
     <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（業種別・給与階級別、1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="https://www.e-stat.go.jp/dbview?sid=0004009620">e-Stat 統計表 0004009620</a> を <a href="https://github.com/dataofjapan/data-of-japan/tree/main/apps/society/work-category/public/data">data-of-japan/work-category</a> の配信データ経由で使用。</span>
   </footer>
 </main>
@@ -124,36 +144,78 @@ const COLORS=["#b35806","#e08214","#fdb863","#fee0b6",null,"#d8daeb","#b2abd2","
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const col=b=>COLORS[b]||css('--neutral-disc');
 const side=b=>d3.color(col(b)).darker(0.55).formatHex();
-const W=1200,CX=600,PX=2.6e-6,H=9,BASE=430,K=110,RY=0.27;
-const M0=22,M1=290,F0=522,F1=790;
+const RY=0.27,N=DATA.inds.length;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DUR=reduce?0:650;
 const st={y:10,s:0,sort:'orig',hover:null,pin:null,band:null,hband:null};
 const inds=DATA.inds.map((d,i)=>({...d,i}));
-const svg=d3.select('#svg');
+const svg=d3.select('#svg'),chartEl=document.querySelector('.chart'),wrap=document.querySelector('.chartwrap');
 const fmtMan=v=>(v/1e4).toLocaleString('ja-JP',{maximumFractionDigits:v<1e5?1:0})+'万人';
 const fmtYen=v=>Math.round(v/10).toLocaleString('ja-JP')+'万円';
 const pct=v=>(v*100).toFixed(1)+'%';
 const share=(d,s,y)=>{const a=d.b[s][y],t=d3.sum(a);return a.map(v=>t?v/t:0)};
 
-svg.append('text').attr('class','sexlabel').attr('x',84).attr('y',150).text('男性');
-svg.append('text').attr('class','sexlabel').attr('x',84).attr('y',690).text('女性');
+// 幅に応じた配置。h: 原作と同じ横並び / v: 縦に積む（左=男性、右=女性）
+const NARROW=["農林水産・|鉱業","建設業","製造業","卸売業・|小売業","宿泊業、|飲食|サービス業","金融業・|保険業","不動産業、|物品賃貸業","電気・ガス・|熱供給・|水道業","運輸業、|郵便業","情報通信業","医療、福祉","学術研究、|専門・技術|サービス業、|教育、|学習支援業","複合サービス|事業","サービス業"];
+let L=null;
+function layout(){
+  const cw=Math.max(300,Math.floor(chartEl.clientWidth));
+  if(cw>=820){
+    const W=Math.max(1000,cw);
+    L={mode:'h',W,Ht:810,PX:2.6e-6,K:110,H:9,base:430,
+      x:p=>60+p*(W-120)/(N-1),y:()=>0,
+      lines:d=>((W-120)/(N-1)<80?NARROW[d.i]:d.name).split('|'),nameY:(i,n)=>458+i*14,
+      pct:{x:0,y:314,a:'middle'},hit:{x:-41,w:82,y:300,h:215}};
+  }else{
+    const W=cw,rowH=124;
+    L={mode:'v',W,Ht:40+N*rowH+10,PX:Math.min(2.6e-6,W*0.125/29.3e6),K:88,H:7,base:40,rowH,
+      x:()=>W/2,y:p=>40+68+p*rowH,
+      lines:d=>{const a=d.name.split('|');return a.length===3?[a[0]+a[1],a[2]]:[a.join('')]},
+      nameY:(i,n)=>-44-(n-1-i)*13,
+      pct:{x:62,y:-30,a:'start'},hit:{x:-W/2,w:W,y:-68,h:122}};
+  }
+  wrap.classList.toggle('wide',L.mode==='h'&&cw>=1000);
+  wrap.classList.toggle('vert',L.mode==='v');
+  document.getElementById('tip').classList.toggle('sheet',L.mode==='v');
+  svg.attr('viewBox',`0 0 ${L.W} ${L.Ht}`);
+  if(L.mode==='h'){
+    sexM.attr('x',L.W*0.07).attr('y',150).attr('text-anchor','start').style('font-size','30px');
+    sexF.attr('x',L.W*0.07).attr('y',690).attr('text-anchor','start').style('font-size','30px');
+  }else{
+    sexM.attr('x',8).attr('y',24).attr('text-anchor','start').style('font-size','17px');
+    sexF.attr('x',L.W-8).attr('y',24).attr('text-anchor','end').style('font-size','17px');
+  }
+  g.select('.name').each(function(d){const ls=L.lines(d);
+    d3.select(this).selectAll('tspan').data(ls).join('tspan').attr('x',0).attr('y',(t,i)=>L.nameY(i,ls.length)).text(t=>t)});
+  g.select('.pct').attr('x',L.pct.x).attr('y',L.pct.y).attr('text-anchor',L.pct.a);
+  g.select('.hit').attr('x',L.hit.x).attr('width',L.hit.w).attr('y',L.hit.y).attr('height',L.hit.h);
+  if(L.mode==='v'){
+    g.select('.cm').attr('text-anchor','end').attr('x',-58).attr('y',-4);
+    g.select('.cf').attr('text-anchor','start').attr('x',58).attr('y',-4);
+  }else{g.select('.cm').attr('y',282);g.select('.cf').attr('y',540)}
+  const lg=d3.select('#lgflow');lg.selectAll('*').remove();
+  [1e5,5e5,1e6,5e6].forEach((v,i)=>{const y=9+i*18;
+    lg.append('line').attr('x1',0).attr('x2',56).attr('y1',y).attr('y2',y).style('stroke','var(--flow-hi)').attr('stroke-width',Math.max(.5,v*L.PX));
+    lg.append('text').attr('x',66).attr('y',y+3.5).text((v/1e4)+'万人');});
+}
+
+const sexM=svg.append('text').attr('class','sexlabel').text('男性');
+const sexF=svg.append('text').attr('class','sexlabel').text('女性');
 const root=svg.append('g').attr('id','root');
 const g=root.selectAll('g.ind').data(inds).join('g').attr('class','ind').attr('tabindex',0)
   .attr('role','button').attr('aria-label',d=>d.name.replaceAll('|',''));
 g.append('path').attr('class','flow m');
 g.append('path').attr('class','flow f');
 const col_g=g.append('g').attr('class','col');
+col_g.append('rect').attr('class','hit');
 const stack=col_g.append('g').attr('class','stack');
 const band=stack.selectAll('g.band').data(d=>d3.range(9).map(b=>({b,d}))).join('g').attr('class','band');
 band.append('path').attr('class','side');
 band.append('ellipse').attr('class','top').attr('cx',0);
-col_g.append('text').attr('class','name').each(function(d){
-  d3.select(this).selectAll('tspan').data(d.name.split('|')).join('tspan').attr('x',0).attr('y',(t,i)=>458+i*14).text(t=>t);});
-col_g.append('text').attr('class','pct').attr('y',314);
-col_g.append('text').attr('class','cnt cm').attr('y',282);
-col_g.append('text').attr('class','cnt cf').attr('y',540);
-col_g.append('rect').attr('class','hit').attr('x',-41).attr('width',82).attr('y',300).attr('height',215);
+col_g.append('text').attr('class','name');
+col_g.append('text').attr('class','pct');
+col_g.append('text').attr('class','cnt cm');
+col_g.append('text').attr('class','cnt cf');
 band.on('pointerenter',(e,o)=>{st.hband=o.b;tip()}).on('pointerleave',()=>{st.hband=null;tip()});
 g.on('pointerenter',(e,d)=>{if(e.pointerType==='touch')return;st.hover=d.i;hl()})
  .on('pointerleave',(e)=>{if(e.pointerType==='touch')return;st.hover=null;hl()})
@@ -164,62 +226,56 @@ function closeTip(){st.pin=null;st.hover=null;st.hband=null;if(document.activeEl
 document.addEventListener('click',()=>{if(active()!==null)closeTip()});
 document.getElementById('tip').addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('#tipclose'))closeTip()});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeTip()});
-// hit rect must not swallow band hover: bands sit above it
-stack.raise();
 
-// legends
-const lf=svg.append('g').attr('transform','translate(1012,34)');
-lf.append('text').attr('class','lg-title').text('業種ごとの就労人数');
-lf.append('text').attr('class','lg-sub').attr('y',16).text('勤めている人数・男女別（線の太さ）');
-[1e5,5e5,1e6,5e6].forEach((v,i)=>{const y=38+i*19;
-  lf.append('line').attr('x1',0).attr('x2',56).attr('y1',y).attr('y2',y).style('stroke','var(--flow-hi)').attr('stroke-width',Math.max(.5,v*PX));
-  lf.append('text').attr('class','lg-sub').attr('x',66).attr('y',y+3.5).text((v/1e4)+'万人');});
-const lb=svg.append('g').attr('transform','translate(1012,640)');
-lb.append('text').attr('class','lg-title').text('業種ごとの給与レンジ');
-lb.append('text').attr('class','lg-sub').attr('y',16).text('そのレンジで給与をもらっている人数');
-lb.append('text').attr('class','lg-sub').attr('y',29).text('（業種内での割合）');
-const lrow=lb.selectAll('g.lg-row').data(d3.range(9).reverse()).join('g').attr('class','lg-row').attr('tabindex',0).attr('role','button')
-  .attr('aria-label',b=>BANDS[b]).attr('transform',(b,i)=>`translate(0,${40+i*12.5})`);
-lrow.append('rect').attr('x',-4).attr('y',-1).attr('width',180).attr('height',12.5).attr('fill','transparent');
-lrow.append('rect').attr('class','sw').attr('x',0).attr('y',0.5).attr('height',10).attr('width',28);
-lrow.append('text').attr('x',38).attr('y',9).text(b=>BANDS[b]);
-const toggleBand=b=>{st.band=st.band===b?null:b;render(true)};
-lrow.on('click',(e,b)=>{e.stopPropagation();toggleBand(b)})
-  .on('keydown',(e,b)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleBand(b)}});
+// 給与レンジの凡例（選ぶと全業種でそのレンジを比べる）
+const lgband=document.getElementById('lgband');
+lgband.innerHTML=d3.range(9).reverse().map(b=>`<button type="button" class="lgb" data-b="${b}" aria-pressed="false"><i></i>${BANDS[b]}</button>`).join('');
+lgband.addEventListener('click',e=>{const t=e.target.closest('.lgb');if(!t)return;e.stopPropagation();const b=+t.dataset.b;st.band=st.band===b?null:b;render(250)});
 
 function order(){
-  const y=st.y,idx=d3.range(inds.length);
+  const y=st.y,idx=d3.range(N);
   if(st.sort==='salary')idx.sort((a,b)=>inds[b].s[0][y]-inds[a].s[0][y]);
   if(st.sort==='workers')idx.sort((a,b)=>inds[b].w[0][y]-inds[a].w[0][y]);
   if(st.sort==='low'){const f=d=>d3.sum(share(d,st.s,y).slice(0,3));idx.sort((a,b)=>f(inds[b])-f(inds[a]));}
   const pos=[];idx.forEach((i,p)=>pos[i]=p);return pos;
 }
-function render(quick){
-  const y=st.y,pos=order(),n=inds.length,xs=p=>60+p*(W-120)/(n-1);
-  const t=svg.transition().duration(quick?Math.min(DUR,250):DUR);
-  // trunk offsets
-  const trunk=s=>{const w=inds.map(d=>Math.max(.5,d.w[s][y]*PX));const tot=d3.sum(w);let acc=CX-tot/2;const tx=[];
-    d3.range(n).sort((a,b)=>pos[a]-pos[b]).forEach(i=>{tx[i]=acc+w[i]/2;acc+=w[i]});return {w,tx}};
-  const tm=trunk(1),tf=trunk(2);
-  g.select('.flow.m').transition(t).attr('stroke-width',d=>tm.w[d.i])
-    .attr('d',d=>{const x=xs(pos[d.i]),a=tm.tx[d.i];return `M${a},${M0}C${a},${M0+115} ${x},${M0+95} ${x},${M1}`});
-  g.select('.flow.f').transition(t).attr('stroke-width',d=>tf.w[d.i])
-    .attr('d',d=>{const x=xs(pos[d.i]),a=tf.tx[d.i];return `M${x},${F0}C${x},${F1-95} ${a},${F1-115} ${a},${F1}`});
-  g.select('.col').transition(t).attr('transform',d=>`translate(${xs(pos[d.i])},0)`);
+function render(dur){
+  if(dur===undefined)dur=DUR;dur=Math.min(dur,DUR);
+  const y=st.y,pos=order(),t=svg.transition().duration(dur),h=L.mode==='h';
+  const byPos=d3.range(N).sort((a,b)=>pos[a]-pos[b]);
+  const widths=s=>inds.map(d=>Math.max(.5,d.w[s][y]*L.PX));
+  const wm=widths(1),wf=widths(2),tm=[],tf=[];
+  if(h){
+    [[wm,tm],[wf,tf]].forEach(([w,tx])=>{let acc=L.W/2-d3.sum(w)/2;byPos.forEach(i=>{tx[i]=acc+w[i]/2;acc+=w[i]})});
+    const M0=22,M1=290,F0=522,F1=790;
+    g.select('.flow.m').transition(t).attr('stroke-width',d=>wm[d.i])
+      .attr('d',d=>{const x=L.x(pos[d.i]),a=tm[d.i];return `M${a},${M0}C${a},${M0+115} ${x},${M0+95} ${x},${M1}`});
+    g.select('.flow.f').transition(t).attr('stroke-width',d=>wf[d.i])
+      .attr('d',d=>{const x=L.x(pos[d.i]),a=tf[d.i];return `M${a},${F1}C${a},${F1-115} ${x},${F1-95} ${x},${F0}`});
+  }else{
+    // 外側から順に積む: 最下段の業種が最も外側、最上段が最も内側
+    let am=8,af=L.W-8;byPos.slice().reverse().forEach(i=>{tm[i]=am+wm[i]/2;am+=wm[i];tf[i]=af-wf[i]/2;af-=wf[i]});
+    const y0=32,R=26,cx=L.W/2;
+    g.select('.flow.m').transition(t).attr('stroke-width',d=>wm[d.i])
+      .attr('d',d=>{const yf=L.y(pos[d.i])+8,a=tm[d.i];return `M${a},${y0}L${a},${yf-R}Q${a},${yf} ${a+R},${yf}L${cx-60},${yf}`});
+    g.select('.flow.f').transition(t).attr('stroke-width',d=>wf[d.i])
+      .attr('d',d=>{const yf=L.y(pos[d.i])+8,a=tf[d.i];return `M${a},${y0}L${a},${yf-R}Q${a},${yf} ${a-R},${yf}L${cx+60},${yf}`});
+  }
+  g.select('.col').transition(t).attr('transform',d=>`translate(${L.x(pos[d.i])},${L.y(pos[d.i])})`);
   band.each(function(o){
-    const sh=share(o.d,st.s,y)[o.b],rx=sh*K,ry=rx*RY,yt=BASE-(o.b+1)*H;
+    const sh=share(o.d,st.s,y)[o.b],rx=sh*L.K,ry=rx*RY,yt=L.base-(o.b+1)*L.H,H=L.H;
     const b=d3.select(this);
     b.select('.side').attr('fill',side(o.b)).transition(t)
       .attr('d',`M${-rx},${yt}L${-rx},${yt+H}A${rx},${ry} 0 0 0 ${rx},${yt+H}L${rx},${yt}A${rx},${ry} 0 0 1 ${-rx},${yt}Z`);
     b.select('.top').attr('fill',col(o.b)).attr('stroke',side(o.b)).attr('stroke-width',.4).transition(t).attr('cy',yt).attr('rx',rx).attr('ry',ry);
   });
   const sb=st.band;
-  root.classed('bandsel',sb!==null);
+  root.classed('bandsel',sb!==null);wrap.classList.toggle('bandsel',sb!==null);
   band.classed('sel',o=>o.b===sb);
-  lrow.classed('sel',b=>b===sb).attr('aria-pressed',b=>b===sb);
-  lrow.select('.sw').attr('fill',b=>col(b)).attr('stroke',b=>side(b)).attr('stroke-width',.4);
+  lgband.querySelectorAll('.lgb').forEach(el=>{const b=+el.dataset.b;el.setAttribute('aria-pressed',b===sb);
+    const i=el.firstChild;i.style.background=col(b);i.style.borderColor=side(b)});
   g.select('.pct').text(d=>sb===null?'':pct(share(d,st.s,y)[sb]));
-  inds.forEach(d=>{d._wm=tm.w[d.i];d._wf=tf.w[d.i]});
+  inds.forEach(d=>{d._wm=wm[d.i];d._wf=wf[d.i]});
   g.select('.cm').text(d=>'男性 '+fmtMan(d.w[1][y]));
   g.select('.cf').text(d=>'女性 '+fmtMan(d.w[2][y]));
   const Y=DATA.years[y];
@@ -243,6 +299,7 @@ function tip(){
    <dt>就労人数</dt><dd>${fmtMan(d.w[0][y])}</dd>
    <dt>　男性 / 女性</dt><dd>${fmtMan(d.w[1][y])} / ${fmtMan(d.w[2][y])}</dd></dl>
    <table><tr><th style="text-align:left">給与レンジ（${sx}）</th><th>人数</th><th>割合</th><th></th></tr>${rows}</table>`;
+  if(L.mode==='v'){el.style.left='';el.style.top='';el.classList.add('show');return}
   const r=g.filter(q=>q.i===a).select('.hit').node().getBoundingClientRect(),tw=270,th=el.offsetHeight;
   let x=r.right+10;if(x+tw>innerWidth-8)x=r.left-tw-10;if(x<8)x=Math.max(8,Math.min(innerWidth-tw-8,r.left));
   let ty=r.top+r.height/2-th/2;ty=Math.max(8,Math.min(innerHeight-th-8,ty));
@@ -256,13 +313,15 @@ let timer=null;const playBtn=document.getElementById('play');
 function stop(){clearInterval(timer);timer=null;playBtn.textContent='▶ 再生'}
 playBtn.onclick=()=>{if(timer)return stop();if(st.y>=10){st.y=0;render()}
   playBtn.textContent='■ 停止';timer=setInterval(()=>{if(st.y>=10)return stop();st.y++;render()},1300)};
-document.getElementById('year').oninput=e=>{stop();st.y=+e.target.value;render(true)};
+document.getElementById('year').oninput=e=>{stop();st.y=+e.target.value;render(250)};
 document.querySelectorAll('#sex button').forEach(b=>b.onclick=()=>{st.s=+b.dataset.s;render()});
 document.getElementById('sort').onchange=e=>{st.sort=e.target.value;render()};
-addEventListener('scroll',tip,true);addEventListener('resize',tip);
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render(true));
-new MutationObserver(()=>render(true)).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-render(true);
+addEventListener('scroll',tip,true);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render(0));
+new MutationObserver(()=>render(0)).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let lastW=0;
+new ResizeObserver(()=>{const w=Math.floor(chartEl.clientWidth);if(w===lastW)return;lastW=w;layout();render(0)}).observe(chartEl);
+lastW=Math.floor(chartEl.clientWidth);layout();render(0);
 </script>
 </body>
 </html>
