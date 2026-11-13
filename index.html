@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* layout: 見出しと操作部を上に、原作と同じ構図の1枚絵（上=男性の流れ / 中央=給与レンジの円盤 / 下=女性の流れ）を主役に置く */
+/* layout: 見出しと操作部を上に、1枚絵（上=男性の流れ / 中央=給与レンジの円盤 / 下=女性の流れ）を主役に置く */
 :root{
   --bg:#ffffff; --ink:#4a4a4f; --ink-soft:#8b8b92; --ink-faint:#b9b9bf;
   --flow:#cfcfd2; --flow-hi:#77777d; --line:#e4e4e8; --panel:#ffffff; --accent:#542788;
@@ -122,12 +122,12 @@ footer a{color:inherit}
       </div></div>
     <div class="ctl"><span>円盤の大きさ</span>
       <div class="seg" id="size" role="group" aria-label="円盤の大きさ">
-        <button type="button" data-v="area">面積に比例</button><button type="button" data-v="width">幅に比例（元の作品）</button>
+        <button type="button" data-v="area">面積に比例</button><button type="button" data-v="width">幅に比例</button>
       </div></div>
     <div class="ctl"><label for="sort">並び順</label>
-      <select id="sort"><option value="orig">元の作品の並び</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
+      <select id="sort"><option value="orig">産業分類の並び</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
     <div class="ctl"><label for="scheme">配色</label>
-      <select id="scheme"><option value="PuOr">オレンジ〜紫（元の作品）</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
+      <select id="scheme"><option value="PuOr">オレンジ〜紫</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
   </div>
   <div class="chartwrap">
     <div class="legends">
@@ -165,7 +165,7 @@ const fmtYen=v=>Math.round(v/10).toLocaleString('ja-JP')+'万円';
 const pct=v=>(v*100).toFixed(1)+'%';
 const share=(d,s,y)=>{const a=d.b[s][y],t=d3.sum(a);return a.map(v=>t?v/t:0)};
 
-// 幅に応じた配置。h: 原作と同じ横並び / v: 縦に積む（左=男性、右=女性）
+// 幅に応じた配置。h: 横並び / v: 縦に積む（左=男性、右=女性）
 const NARROW=["農林水産・|鉱業","建設業","製造業","卸売業・|小売業","宿泊業、|飲食|サービス業","金融業・|保険業","不動産業、|物品賃貸業","電気・ガス・|熱供給・|水道業","運輸業、|郵便業","情報通信業","医療、福祉","学術研究、|専門・技術|サービス業、|教育、|学習支援業","複合サービス|事業","サービス業"];
 let L=null;
 function layout(){
