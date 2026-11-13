@@ -110,7 +110,7 @@ footer a{color:inherit}
 <main>
   <header>
     <h1>業種によって給与レンジはどのくらい異なるのか？</h1>
-    <p class="lede">上下の線は業種ごとの就労人数で、上半分が男性、下半分が女性です。<span id="avgtext"></span>を含む「400万円超 500万円以下」を基準として、より多くもらっているほど<span id="hiname">紺</span>、より少なくもらっているほど<span id="loname">オレンジ</span>で着色されています。円盤の幅は、その業種の中でそのレンジにいる人の割合です。</p>
+    <p class="lede">上下の線は業種ごとの就労人数で、上半分が男性、下半分が女性です。<span id="avgtext"></span>を含む「400万円超 500万円以下」を基準として、より多くもらっているほど<span id="hiname">紺</span>、より少なくもらっているほど<span id="loname">オレンジ</span>で着色されています。<span id="sizetext"></span></p>
   </header>
   <div class="controls">
     <div class="ctl"><b id="yearlabel"></b>
@@ -119,6 +119,10 @@ footer a{color:inherit}
     <div class="ctl"><span>円盤の対象</span>
       <div class="seg" id="sex" role="group" aria-label="円盤の対象">
         <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
+      </div></div>
+    <div class="ctl"><span>円盤の大きさ</span>
+      <div class="seg" id="size" role="group" aria-label="円盤の大きさ">
+        <button type="button" data-v="area">面積に比例</button><button type="button" data-v="width">幅に比例（元の作品）</button>
       </div></div>
     <div class="ctl"><label for="sort">並び順</label>
       <select id="sort"><option value="orig">元の作品の並び</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
@@ -152,7 +156,8 @@ const side=b=>d3.color(col(b)).darker(0.55).formatHex();
 const RY=0.27,N=DATA.inds.length;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DUR=reduce?0:650;
-const st={y:10,s:0,sort:'orig',hover:null,pin:null,band:null,hband:null};
+const st={y:10,s:0,sort:'orig',size:'area',hover:null,pin:null,band:null,hband:null};
+try{const v=localStorage.getItem('discsize');if(v==='area'||v==='width')st.size=v}catch(e){}
 const inds=DATA.inds.map((d,i)=>({...d,i}));
 const svg=d3.select('#svg'),chartEl=document.querySelector('.chart'),wrap=document.querySelector('.chartwrap');
 const fmtMan=v=>(v/1e4).toLocaleString('ja-JP',{maximumFractionDigits:v<1e5?1:0})+'万人';
@@ -167,13 +172,13 @@ function layout(){
   const cw=Math.max(300,Math.floor(chartEl.clientWidth));
   if(cw>=820){
     const W=Math.max(1000,cw);
-    L={mode:'h',W,Ht:810,PX:2.6e-6,K:110,H:9,base:430,
+    L={mode:'h',W,Ht:810,PX:2.6e-6,rl:66,ra:54,H:9,base:430,
       x:p=>60+p*(W-120)/(N-1),y:()=>0,
       lines:d=>((W-120)/(N-1)<80?NARROW[d.i]:d.name).split('|'),nameY:(i,n)=>458+i*14,
       pct:{x:0,y:314,a:'middle'},hit:{x:-41,w:82,y:300,h:215}};
   }else{
     const W=cw,rowH=124;
-    L={mode:'v',W,Ht:40+N*rowH+10,PX:Math.min(2.6e-6,W*0.125/29.3e6),K:88,H:7,base:40,rowH,
+    L={mode:'v',W,Ht:40+N*rowH+10,PX:Math.min(2.6e-6,W*0.125/29.3e6),rl:52.8,ra:48,H:7,base:40,rowH,
       x:()=>W/2,y:p=>40+68+p*rowH,
       lines:d=>{const a=d.name.split('|');return a.length===3?[a[0]+a[1],a[2]]:[a.join('')]},
       nameY:(i,n)=>-44-(n-1-i)*13,
@@ -267,8 +272,10 @@ function render(dur){
       .attr('d',d=>{const yf=L.y(pos[d.i])+8,a=tf[d.i];return `M${a},${y0}L${a},${yf-R}Q${a},${yf} ${a-R},${yf}L${cx+60},${yf}`});
   }
   g.select('.col').transition(t).attr('transform',d=>`translate(${L.x(pos[d.i])},${L.y(pos[d.i])})`);
+  // 円盤の半径: 面積に比例させるなら平方根スケール、幅に比例させるなら線形スケール
+  const rs=(st.size==='area'?d3.scaleSqrt():d3.scaleLinear()).domain([0,0.6]).range([0,st.size==='area'?L.ra:L.rl]);
   band.each(function(o){
-    const sh=share(o.d,st.s,y)[o.b],rx=sh*L.K,ry=rx*RY,yt=L.base-(o.b+1)*L.H,H=L.H;
+    const sh=share(o.d,st.s,y)[o.b],rx=rs(sh),ry=rx*RY,yt=L.base-(o.b+1)*L.H,H=L.H;
     const b=d3.select(this);
     b.select('.side').attr('fill',side(o.b)).transition(t)
       .attr('d',`M${-rx},${yt}L${-rx},${yt+H}A${rx},${ry} 0 0 0 ${rx},${yt+H}L${rx},${yt}A${rx},${ry} 0 0 1 ${-rx},${yt}Z`);
@@ -289,6 +296,8 @@ function render(dur){
   document.getElementById('year').value=y;
   document.getElementById('avgtext').textContent=`${Y}年分の平均給与${Math.round(DATA.total.s[0][y]/10)}万円`;
   document.querySelectorAll('#sex button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===st.s));
+  document.querySelectorAll('#size button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===st.size));
+  document.getElementById('sizetext').textContent=st.size==='area'?'円盤の面積は、その業種の中でそのレンジにいる人の割合に比例します。':'円盤の幅は、その業種の中でそのレンジにいる人の割合に比例します。';
   tip();
 }
 const active=()=>st.hover!==null?st.hover:st.pin;
@@ -321,6 +330,7 @@ playBtn.onclick=()=>{if(timer)return stop();if(st.y>=10){st.y=0;render()}
   playBtn.textContent='■ 停止';timer=setInterval(()=>{if(st.y>=10)return stop();st.y++;render()},1300)};
 document.getElementById('year').oninput=e=>{stop();st.y=+e.target.value;render(250)};
 document.querySelectorAll('#sex button').forEach(b=>b.onclick=()=>{st.s=+b.dataset.s;render()});
+document.querySelectorAll('#size button').forEach(b=>b.onclick=()=>{st.size=b.dataset.v;try{localStorage.setItem('discsize',st.size)}catch(err){}render()});
 document.getElementById('sort').onchange=e=>{st.sort=e.target.value;render()};
 const schemeSel=document.getElementById('scheme');schemeSel.value=scheme;
 schemeSel.onchange=e=>{scheme=e.target.value;try{localStorage.setItem('scheme',scheme)}catch(err){}render(0)};
