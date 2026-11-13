@@ -149,7 +149,7 @@ let scheme='PuOr';try{const v=localStorage.getItem('scheme');if(SCHEMES[v])schem
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const col=b=>{const c=SCHEMES[scheme].c[b],h=d3.hsl(c);return b===4&&h.l>0.94&&(h.s<0.2||isNaN(h.s))?css('--neutral-disc'):c};
 const side=b=>d3.color(col(b)).darker(0.55).formatHex();
-const RY=0.27,N=DATA.inds.length;
+const FA=0.55,FB=0.5,FC=0.74,RY=0.27,N=DATA.inds.length;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DUR=reduce?0:650;
 const st={y:10,s:0,sort:'orig',hover:null,pin:null,band:null,hband:null};
@@ -183,6 +183,9 @@ function layout(){
   wrap.classList.toggle('vert',L.mode==='v');
   document.getElementById('tip').classList.toggle('sheet',L.mode==='v');
   svg.attr('viewBox',`0 0 ${L.W} ${L.Ht}`);
+  const h0=L.mode==='h';
+  clipM.attr('x',0).attr('width',L.W).attr('y',h0?22:0).attr('height',L.Ht);
+  clipF.attr('x',0).attr('width',L.W).attr('y',0).attr('height',h0?790:L.Ht);
   if(L.mode==='h'){
     sexM.attr('x',L.W*0.07).attr('y',150).attr('text-anchor','start').style('font-size','30px');
     sexF.attr('x',L.W*0.07).attr('y',690).attr('text-anchor','start').style('font-size','30px');
@@ -204,13 +207,15 @@ function layout(){
     lg.append('text').attr('x',66).attr('y',y+3.5).text((v/1e4)+'万人');});
 }
 
+const defs=svg.append('defs');
+const clipM=defs.append('clipPath').attr('id','clipM').append('rect'),clipF=defs.append('clipPath').attr('id','clipF').append('rect');
 const sexM=svg.append('text').attr('class','sexlabel').text('男性');
 const sexF=svg.append('text').attr('class','sexlabel').text('女性');
 const root=svg.append('g').attr('id','root');
 const g=root.selectAll('g.ind').data(inds).join('g').attr('class','ind').attr('tabindex',0)
   .attr('role','button').attr('aria-label',d=>d.name.replaceAll('|',''));
-g.append('path').attr('class','flow m');
-g.append('path').attr('class','flow f');
+g.append('path').attr('class','flow m').attr('clip-path','url(#clipM)');
+g.append('path').attr('class','flow f').attr('clip-path','url(#clipF)');
 const col_g=g.append('g').attr('class','col');
 col_g.append('rect').attr('class','hit');
 const stack=col_g.append('g').attr('class','stack');
@@ -253,10 +258,11 @@ function render(dur){
   if(h){
     [[wm,tm],[wf,tf]].forEach(([w,tx])=>{let acc=L.W/2-d3.sum(w)/2;byPos.forEach(i=>{tx[i]=acc+w[i]/2;acc+=w[i]})});
     const M0=22,M1=290,F0=522,F1=790;
-    g.select('.flow.m').transition(t).attr('stroke-width',d=>wm[d.i])
-      .attr('d',d=>{const x=L.x(pos[d.i]),a=tm[d.i];return `M${a},${M0}C${a},${M0+115} ${x},${M0+95} ${x},${M1}`});
-    g.select('.flow.f').transition(t).attr('stroke-width',d=>wf[d.i])
-      .attr('d',d=>{const x=L.x(pos[d.i]),a=tf[d.i];return `M${a},${F1}C${a},${F1-115} ${x},${F1-95} ${x},${F0}`});
+    // 傘の骨のような弧: 幹から業種の方向へ斜めに出て、変曲点なしで垂直に降りる
+    const rib=(a,x,y0,y1)=>{const D=y1-y0,vx=x-a,vy=FA*D,n=Math.hypot(vx,vy),ux=vx/n,uy=vy/n;
+      return `M${a-ux*30},${y0-uy*30}L${a},${y0}C${a+vx*FB},${y0+vy*FB} ${x},${y0+FC*D} ${x},${y1}`};
+    g.select('.flow.m').transition(t).attr('stroke-width',d=>wm[d.i]).attr('d',d=>rib(tm[d.i],L.x(pos[d.i]),M0,M1));
+    g.select('.flow.f').transition(t).attr('stroke-width',d=>wf[d.i]).attr('d',d=>rib(tf[d.i],L.x(pos[d.i]),F1,F0));
   }else{
     // 外側から順に積む: 最下段の業種が最も外側、最上段が最も内側
     let am=8,af=L.W-8;byPos.slice().reverse().forEach(i=>{tm[i]=am+wm[i]/2;am+=wm[i];tf[i]=af-wf[i]/2;af-=wf[i]});
