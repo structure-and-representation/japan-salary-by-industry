@@ -27,6 +27,12 @@
 
 例: `https://visualizing-jp.github.io/japan-salary-by-industry/#year=2020&industry=5&compare=1`
 
+## 試作: 回せる立体
+
+[https://visualizing-jp.github.io/japan-salary-by-industry/object/](https://visualizing-jp.github.io/japan-salary-by-industry/object/)
+
+1業種の給与レンジを、積み木のような立体にした試作です（`object/`）。ドラッグで回せ、業種を替えると円盤が上から落ちて積み上がります。描画には同梱の Three.js（`vendor/three/`）を使い、データと配色は本体と共用しています。URL の `industry`・`year`・`sex` で表示内容を指定できます。
+
 ## データ
 
 国税庁「民間給与実態統計調査」全国計表 第9表（業種別・給与階級別、1年を通じて勤務した給与所得者）。
