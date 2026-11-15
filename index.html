@@ -22,31 +22,31 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=7240179b">
-<link rel="stylesheet" href="object/object.css?v=7240179b">
-<link rel="stylesheet" href="objects/objects.css?v=7240179b">
-<meta name="build" content="7240179b">
+<link rel="stylesheet" href="css/style.css?v=18383f5c">
+<link rel="stylesheet" href="object/object.css?v=18383f5c">
+<link rel="stylesheet" href="objects/objects.css?v=18383f5c">
+<meta name="build" content="18383f5c">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "./vendor/three/three.module.min.js?v=7240179b",
-  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=7240179b",
-  "./js/closeup.js": "./js/closeup.js?v=7240179b",
-  "./js/colors.js": "./js/colors.js?v=7240179b",
-  "./js/config.js": "./js/config.js?v=7240179b",
-  "./js/controls.js": "./js/controls.js?v=7240179b",
-  "./js/data.js": "./js/data.js?v=7240179b",
-  "./js/discs.js": "./js/discs.js?v=7240179b",
-  "./js/format.js": "./js/format.js?v=7240179b",
-  "./js/layout.js": "./js/layout.js?v=7240179b",
-  "./js/main.js": "./js/main.js?v=7240179b",
-  "./js/overview.js": "./js/overview.js?v=7240179b",
-  "./js/state.js": "./js/state.js?v=7240179b",
-  "./js/url.js": "./js/url.js?v=7240179b",
-  "./object/object.js": "./object/object.js?v=7240179b",
-  "./object/toy.js": "./object/toy.js?v=7240179b",
-  "./objects/objects.js": "./objects/objects.js?v=7240179b"
+  "three": "./vendor/three/three.module.min.js?v=18383f5c",
+  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=18383f5c",
+  "./js/closeup.js": "./js/closeup.js?v=18383f5c",
+  "./js/colors.js": "./js/colors.js?v=18383f5c",
+  "./js/config.js": "./js/config.js?v=18383f5c",
+  "./js/controls.js": "./js/controls.js?v=18383f5c",
+  "./js/data.js": "./js/data.js?v=18383f5c",
+  "./js/discs.js": "./js/discs.js?v=18383f5c",
+  "./js/format.js": "./js/format.js?v=18383f5c",
+  "./js/layout.js": "./js/layout.js?v=18383f5c",
+  "./js/main.js": "./js/main.js?v=18383f5c",
+  "./js/overview.js": "./js/overview.js?v=18383f5c",
+  "./js/state.js": "./js/state.js?v=18383f5c",
+  "./js/url.js": "./js/url.js?v=18383f5c",
+  "./object/object.js": "./object/object.js?v=18383f5c",
+  "./object/toy.js": "./object/toy.js?v=18383f5c",
+  "./objects/objects.js": "./objects/objects.js?v=18383f5c"
  }
 }
 </script>
@@ -64,7 +64,8 @@
         <button type="button" data-v="share">業種内の割合</button><button type="button" data-v="count">人数</button>
       </div></div>
     <div class="ctl yearctl"><b id="yearlabel"></b>
-      <div class="yearpick"><input type="range" id="year" min="0" max="10" step="1" value="10" aria-label="年分"><div class="yticks" id="yticks"></div></div></div>
+      <div class="yearpick"><input type="range" id="year" min="0" max="10" step="1" value="10" aria-label="年分"><div class="yticks" id="yticks"></div></div>
+      <button id="play" type="button" aria-pressed="false">▶ 再生</button></div>
     <div class="ctl"><span>対象</span>
       <div class="seg" id="sex" role="group" aria-label="対象">
         <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button><button type="button" id="pair" data-s="compare" title="業種を選ぶと使えます" disabled>男女を並べる</button>
@@ -85,6 +86,6 @@
   </footer>
 </main>
 <script src="vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="objects/objects.js?v=7240179b"></script>
+<script type="module" src="objects/objects.js?v=18383f5c"></script>
 </body>
 </html>

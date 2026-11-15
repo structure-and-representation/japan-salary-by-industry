@@ -169,16 +169,47 @@ export function createRenderer(canvas) {
   return renderer;
 }
 
-/** 年の選択（スライダーと年ラベル）を組み立てる。onPick(yearIndex) を呼ぶ */
+/** 再生で年を進める間隔（ミリ秒） */
+const PLAY_INTERVAL = 1300;
+
+/**
+ * 年の選択（スライダー、年ラベル、再生ボタン）を組み立てる。年を替えるたびに onPick(yearIndex) を呼ぶ。
+ * 再生は一定の間隔で1年ずつ進め、最後の年で止まる。スライダーや年ラベルで年を選ぶと、再生は止まる
+ */
 export function setupYearPicker(data, onPick) {
   const slider = document.getElementById('year');
   const ticks = document.getElementById('yticks');
-  slider.max = data.years.length - 1;
+  const playButton = document.getElementById('play');
+  const lastYear = data.years.length - 1;
+  let current = lastYear;
+  let timer = null;
+  function stopPlay() {
+    clearInterval(timer);
+    timer = null;
+    playButton.textContent = '▶ 再生';
+    playButton.setAttribute('aria-pressed', 'false');
+  }
+  playButton.onclick = () => {
+    if (timer) { stopPlay(); return; }
+    // 最後の年にいるときは、最初の年から始める
+    if (current >= lastYear) onPick(0);
+    playButton.textContent = '■ 停止';
+    playButton.setAttribute('aria-pressed', 'true');
+    timer = setInterval(() => {
+      if (current >= lastYear) { stopPlay(); return; }
+      onPick(current + 1);
+      if (current >= lastYear) stopPlay();
+    }, PLAY_INTERVAL);
+  };
+  /** 手で年を選んだとき: 再生を止めてから反映する */
+  const pickByHand = (yearIndex) => { if (timer) stopPlay(); onPick(yearIndex); };
+  slider.max = lastYear;
   ticks.innerHTML = data.years
     .map((year, i) => `<span class="yt"><i></i><button type="button" tabindex="-1" data-y="${i}" aria-label="${year}年分">${year}</button></span>`).join('');
-  ticks.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) onPick(+b.dataset.y); });
-  slider.oninput = (e) => onPick(+e.target.value);
+  ticks.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) pickByHand(+b.dataset.y); });
+  slider.oninput = (e) => pickByHand(+e.target.value);
   return (yearIndex) => {
+    current = yearIndex;
     document.getElementById('yearlabel').innerHTML = `${data.years[yearIndex]}<small>年分</small>`;
     slider.value = yearIndex;
     ticks.querySelectorAll('.yt').forEach((el, i) => el.classList.toggle('cur', i === yearIndex));
