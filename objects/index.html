@@ -2,71 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>業種別 給与レンジの立体を並べる（試作）</title>
-<meta name="description" content="14業種の給与レンジの構成を、台の上に並べた積み木のような立体で見比べる試作。">
-<link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/style.css?v=b6eff502">
-<link rel="stylesheet" href="../object/object.css?v=b6eff502">
-<link rel="stylesheet" href="objects.css?v=b6eff502">
-<meta name="build" content="b6eff502">
-<!-- build:importmap（scripts/stamp-version.mjs が生成） -->
-<script type="importmap">
-{
- "imports": {
-  "three": "../vendor/three/three.module.min.js?v=b6eff502",
-  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=b6eff502",
-  "../js/closeup.js": "../js/closeup.js?v=b6eff502",
-  "../js/colors.js": "../js/colors.js?v=b6eff502",
-  "../js/config.js": "../js/config.js?v=b6eff502",
-  "../js/controls.js": "../js/controls.js?v=b6eff502",
-  "../js/data.js": "../js/data.js?v=b6eff502",
-  "../js/discs.js": "../js/discs.js?v=b6eff502",
-  "../js/format.js": "../js/format.js?v=b6eff502",
-  "../js/layout.js": "../js/layout.js?v=b6eff502",
-  "../js/main.js": "../js/main.js?v=b6eff502",
-  "../js/overview.js": "../js/overview.js?v=b6eff502",
-  "../js/state.js": "../js/state.js?v=b6eff502",
-  "../js/url.js": "../js/url.js?v=b6eff502",
-  "../object/object.js": "../object/object.js?v=b6eff502",
-  "../object/toy.js": "../object/toy.js?v=b6eff502",
-  "./objects.js": "./objects.js?v=b6eff502"
- }
-}
-</script>
-<!-- /build:importmap -->
+<meta name="robots" content="noindex">
+<title>業種別 給与レンジと就労人数</title>
+<script>location.replace('../' + location.hash);</script>
+<meta http-equiv="refresh" content="0; url=../">
 </head>
 <body>
-<main>
-  <header>
-    <h1>14業種の給与レンジを、積み木のように並べる<small class="proto">試作</small></h1>
-    <p class="lede">積み木1つが業種1つ、円盤1枚が給与レンジ1つです。下が低い給与、上が高い給与です。<span id="sizetext"></span>ドラッグで回し、ホイールやピンチで近づけます。積み木をクリック（タップ）すると、その業種だけが残り、左右に内訳が出ます。</p>
-  </header>
-  <div class="controls">
-    <div class="ctl"><span>円盤の面積</span>
-      <div class="seg" id="size" role="group" aria-label="円盤の面積">
-        <button type="button" data-v="share">業種内の割合</button><button type="button" data-v="count">人数</button>
-      </div></div>
-    <div class="ctl yearctl"><b id="yearlabel"></b>
-      <div class="yearpick"><input type="range" id="year" min="0" max="10" step="1" value="10" aria-label="年分"><div class="yticks" id="yticks"></div></div></div>
-    <div class="ctl"><span>対象</span>
-      <div class="seg" id="sex" role="group" aria-label="対象">
-        <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
-      </div></div>
-  </div>
-  <div class="view wideview" id="view"><canvas id="canvas" aria-label="14業種の給与レンジの円盤を積み重ねた立体"></canvas>
-    <div id="labels" aria-hidden="true"></div>
-    <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div>
-      <div class="fsex" id="fmale">男性</div><div class="fsex" id="ffemale">女性</div></div>
-    <div class="viewbtns"><button id="pair" type="button" aria-pressed="false" hidden>男女を並べる</button><button id="reset" type="button" hidden>全体に戻る</button></div></div>
-  <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
-  <footer>
-    <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
-    <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="../">平面の一覧に戻る</a>　<a href="../object/">1業種だけの立体</a></span></div>
-    <div class="credit">制作：<a href="https://notation.co.jp/">矢崎裕一</a></div>
-  </footer>
-</main>
-<script src="../vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="objects.js?v=b6eff502"></script>
+<p>このページは <a href="../">トップページ</a> に移りました。</p>
 </body>
 </html>

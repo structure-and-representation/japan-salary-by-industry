@@ -1,15 +1,18 @@
 # 業種によって給与レンジはどのくらい異なるのか？
 
-業種ごとの就労人数（男女別）と給与レンジの構成を1枚で見るインタラクティブな可視化です。
+日本の14業種について、給与レンジの構成を積み木のような立体で見比べるインタラクティブな可視化です。
 
-公開ページ: https://japan-salary-by-industry.structure-and-representation.com/
+| ページ | 内容 |
+| --- | --- |
+| [トップ](https://japan-salary-by-industry.structure-and-representation.com/) | 14業種の積み木を台の上に並べて見比べる。積み木を選ぶとその業種に寄り、男女を左右に並べることもできる |
+| [1業種ずつ見る](https://japan-salary-by-industry.structure-and-representation.com/object/) | 1つの積み木を大きく出し、回して眺める |
 
-- 上下の線は業種ごとの就労人数で、上半分が男性、下半分が女性です。
-- 中央の円盤は、その業種の中で各給与レンジにいる人の割合です。「400万円超 500万円以下」を基準に、多いほど紺、少ないほどオレンジで着色しています。
-- 2014〜2024年分を切り替えられます。
-- 業種をクリック（タップ）すると、その業種だけを画面中央に拡大し、給与レンジごとの人数と割合を表示します。男性と女性を左右に並べて比べることや、「800万円超」の内訳（6階級）を見ることもできます。
-- 線の太さは人数に比例します。細すぎて太さで表せない線は点線で描きます。
-- 円盤の面積は、その業種の中でそのレンジにいる人の割合に比例します。
+- 積み木1つが業種1つ、円盤1枚が給与レンジ1つです。下が低い給与、上が高い給与です。
+- 円盤の面積は、「業種内の割合」と「人数」を切り替えられます。人数にすると全業種で同じ尺度になり、働く人が多い業種ほど大きな積み木になります。
+- 「400万円超 500万円以下」を基準に、給与が高いレンジほど紺、低いレンジほどオレンジで着色しています。
+- 2014〜2024年分と、男女計・男性・女性を切り替えられます。
+
+以前の平面版は `/2d/` に残しています。どのページからもリンクしておらず、検索エンジンにも載せない指定にしています。
 
 ## URL で状態を共有する
 
@@ -17,27 +20,13 @@
 
 | 項目 | 値 | 例 |
 | --- | --- | --- |
+| `size` | 円盤の面積を人数にするとき `count` | `size=count` |
 | `year` | 年 | `year=2020` |
 | `sex` | `male` / `female`（男女計は省略） | `sex=female` |
-| `sort` | `salary` / `workers` / `lowShare`（国税庁の統計表の順は省略） | `sort=salary` |
-| `scheme` | `RdBu` / `RdYlBu` / `BrBG` / `PiYG` / `PRGn`（オレンジ〜紫は省略） | `scheme=RdBu` |
-| `band` | 凡例で選んだ給与レンジ。0（100万円以下）〜8（800万円超） | `band=8` |
-| `industry` | 拡大表示する業種。統計表の業種コード 1〜14 | `industry=5` |
-| `compare` | 拡大表示で男女を並べるとき `1` | `compare=1` |
+| `industry` | 寄る業種。統計表の業種コード 1〜14 | `industry=5` |
+| `compare` | 寄った業種で男女を並べるとき `1` | `compare=1` |
 
-例: `https://japan-salary-by-industry.structure-and-representation.com/#year=2020&industry=5&compare=1`
-
-## 試作: 回せる立体
-
-[https://japan-salary-by-industry.structure-and-representation.com/object/](https://japan-salary-by-industry.structure-and-representation.com/object/)
-
-1業種の給与レンジを、積み木のような立体にした試作です（`object/`）。ドラッグで回せ、業種を替えると円盤が上から落ちて積み上がります。描画には同梱の Three.js（`vendor/three/`）を使い、データと配色は本体と共用しています。URL の `industry`・`year`・`sex` で表示内容を指定できます。
-
-## 試作: 14業種の立体を並べる
-
-[https://japan-salary-by-industry.structure-and-representation.com/objects/](https://japan-salary-by-industry.structure-and-representation.com/objects/)
-
-同じ積み木を14業種ぶん台の上に並べた試作です（`objects/`）。全体を回して見比べ、積み木をクリックするとその業種だけが残り、左に概要、右に各層の給与レンジ・割合・人数が出ます。業種名は、ほかの積み木と重ならない位置に置き、重なるときは隠します。円盤の面積は「業種内の割合」と「人数」を切り替えられ、人数にすると全業種で同じ尺度になります。寄った状態で「男女を並べる」を押すと、男性と女性の積み木が左右に並び、その間に各層の割合と人数が出ます。URL の `size=count`・`year`・`sex`・`industry`・`compare=1` で表示内容を指定できます。立体の部品（円盤の形、積み重ね、光）は `object/toy.js` にあり、2つの試作で共用しています。
+例: `https://japan-salary-by-industry.structure-and-representation.com/#size=count&industry=11&compare=1`
 
 ## データ
 
@@ -50,23 +39,17 @@
 
 | 場所 | 内容 |
 | --- | --- |
-| `index.html` | ページの骨組み |
-| `css/style.css` | スタイル |
-| `js/main.js` | 起動と配線。状態の変化を、必要な描画だけにつなぐ |
-| `js/config.js` | 定数（円盤・線の尺度、業種名の改行位置など） |
-| `js/data.js` | データの読み込みと、割合・表示順の計算 |
-| `js/state.js` | 画面の状態（年、対象、並び順、配色など） |
-| `js/layout.js` | 表示幅から決まる配置（横並び／縦積み）の座標 |
-| `js/discs.js` | 円盤の積み重ねの描画。一覧と拡大表示で共用 |
-| `js/overview.js` | 一覧（上下の流れと業種ごとの円盤） |
-| `js/closeup.js` | 拡大表示 |
-| `js/controls.js` | 操作部と凡例 |
-| `js/colors.js` | 配色 |
-| `js/format.js` | 数値の表示形式 |
-| `js/url.js` | 画面の状態と URL の相互変換 |
+| `index.html` | トップ（14業種の立体）の骨組み |
+| `objects/` | トップのスクリプトとスタイル。`objects/index.html` は、以前のURLからトップへ転送するだけのページ |
+| `object/` | 1業種ずつ見るページ。`toy.js` は立体の共通部品（円盤の形、積み重ね、光と床）で、トップも使う |
+| `2d/index.html` | 平面版の骨組み |
+| `js/` | 共通のスクリプトと、平面版のスクリプト |
+| `js/config.js`・`data.js`・`colors.js`・`format.js`・`url.js` | 全ページ共通: 定数、データの読み込みと計算、配色、数値の表示形式、URL との相互変換 |
+| `js/main.js`・`state.js`・`layout.js`・`discs.js`・`overview.js`・`closeup.js`・`controls.js` | 平面版だけが使う |
+| `css/style.css` | 全ページ共通のスタイル |
 | `data/salary.json` | 表示用のデータ（下の手順で生成） |
-| `scripts/` | データの生成と検証 |
-| `vendor/` | 同梱している D3 v7.9.0 |
+| `scripts/` | データの生成と検証、版の番号付け |
+| `vendor/` | 同梱している D3 v7.9.0 と Three.js r170 |
 | `og-image.png`、`favicon.svg` | 共有時のサムネイル画像と、タブのアイコン |
 
 ビルドは不要で、外部のサーバーからは何も読み込みません（書体は端末のものを使います）。ES モジュールと `fetch` を使っているので、手元で開くときはファイルを直接開かず、簡易サーバーを立ててください。

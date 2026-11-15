@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>業種別 給与レンジと就労人数</title>
-<meta name="description" content="日本の14業種について、男女別の就労人数と給与レンジの構成を1枚で見るインタラクティブな可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
+<meta name="description" content="日本の14業種の給与レンジの構成を、台の上に並べた積み木のような立体で見比べる可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="業種によって給与レンジはどのくらい異なるのか？">
-<meta property="og:description" content="日本の14業種について、男女別の就労人数と給与レンジの構成を1枚で見るインタラクティブな可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
+<meta property="og:description" content="日本の14業種の給与レンジの構成を、台の上に並べた積み木のような立体で見比べる可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
 <meta property="og:url" content="https://japan-salary-by-industry.structure-and-representation.com/">
 <meta property="og:image" content="https://japan-salary-by-industry.structure-and-representation.com/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -15,24 +15,31 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=b6eff502">
-<meta name="build" content="b6eff502">
+<link rel="stylesheet" href="css/style.css?v=8cc331d4">
+<link rel="stylesheet" href="object/object.css?v=8cc331d4">
+<link rel="stylesheet" href="objects/objects.css?v=8cc331d4">
+<meta name="build" content="8cc331d4">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "./js/closeup.js": "./js/closeup.js?v=b6eff502",
-  "./js/colors.js": "./js/colors.js?v=b6eff502",
-  "./js/config.js": "./js/config.js?v=b6eff502",
-  "./js/controls.js": "./js/controls.js?v=b6eff502",
-  "./js/data.js": "./js/data.js?v=b6eff502",
-  "./js/discs.js": "./js/discs.js?v=b6eff502",
-  "./js/format.js": "./js/format.js?v=b6eff502",
-  "./js/layout.js": "./js/layout.js?v=b6eff502",
-  "./js/main.js": "./js/main.js?v=b6eff502",
-  "./js/overview.js": "./js/overview.js?v=b6eff502",
-  "./js/state.js": "./js/state.js?v=b6eff502",
-  "./js/url.js": "./js/url.js?v=b6eff502"
+  "three": "./vendor/three/three.module.min.js?v=8cc331d4",
+  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=8cc331d4",
+  "./js/closeup.js": "./js/closeup.js?v=8cc331d4",
+  "./js/colors.js": "./js/colors.js?v=8cc331d4",
+  "./js/config.js": "./js/config.js?v=8cc331d4",
+  "./js/controls.js": "./js/controls.js?v=8cc331d4",
+  "./js/data.js": "./js/data.js?v=8cc331d4",
+  "./js/discs.js": "./js/discs.js?v=8cc331d4",
+  "./js/format.js": "./js/format.js?v=8cc331d4",
+  "./js/layout.js": "./js/layout.js?v=8cc331d4",
+  "./js/main.js": "./js/main.js?v=8cc331d4",
+  "./js/overview.js": "./js/overview.js?v=8cc331d4",
+  "./js/state.js": "./js/state.js?v=8cc331d4",
+  "./js/url.js": "./js/url.js?v=8cc331d4",
+  "./object/object.js": "./object/object.js?v=8cc331d4",
+  "./object/toy.js": "./object/toy.js?v=8cc331d4",
+  "./objects/objects.js": "./objects/objects.js?v=8cc331d4"
  }
 }
 </script>
@@ -42,57 +49,33 @@
 <main>
   <header>
     <h1>業種によって給与レンジはどのくらい異なるのか？</h1>
-    <p class="lede">上下の線は業種ごとの就労人数で、上半分が男性、下半分が女性です。<span id="avgtext"></span>を含む「400万円超 500万円以下」を基準として、より多くもらっているほど<span id="hiname">紺</span>、より少なくもらっているほど<span id="loname">オレンジ</span>で着色されています。円盤の面積は、その業種の中でそのレンジにいる人の割合に比例します。</p>
+    <p class="lede">積み木1つが業種1つ、円盤1枚が給与レンジ1つです。下が低い給与、上が高い給与です。<span id="sizetext"></span>ドラッグで回し、ホイールやピンチで近づけます。積み木をクリック（タップ）すると、その業種だけが残り、左右に内訳が出ます。</p>
   </header>
   <div class="controls">
+    <div class="ctl"><span>円盤の面積</span>
+      <div class="seg" id="size" role="group" aria-label="円盤の面積">
+        <button type="button" data-v="share">業種内の割合</button><button type="button" data-v="count">人数</button>
+      </div></div>
     <div class="ctl yearctl"><b id="yearlabel"></b>
-      <div class="yearpick"><input type="range" id="year" min="0" max="10" step="1" value="10" aria-label="年分"><div class="yticks" id="yticks"></div></div>
-      <button id="play" type="button">▶ 再生</button></div>
-    <div class="ctl"><span>円盤の対象</span>
-      <div class="seg" id="sex" role="group" aria-label="円盤の対象">
+      <div class="yearpick"><input type="range" id="year" min="0" max="10" step="1" value="10" aria-label="年分"><div class="yticks" id="yticks"></div></div></div>
+    <div class="ctl"><span>対象</span>
+      <div class="seg" id="sex" role="group" aria-label="対象">
         <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
       </div></div>
-    <div class="ctl"><label for="sort">並び順</label>
-      <select id="sort"><option value="nta">国税庁の統計表の順</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="lowShare">300万円以下の割合が高い順</option></select></div>
-    <div class="ctl"><label for="scheme">配色</label>
-      <select id="scheme"><option value="PuOr">オレンジ〜紫</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
   </div>
-  <div class="chartwrap">
-    <div class="legends">
-      <div class="lg lg-flow"><h3>業種ごとの就労人数</h3><p>勤めている人数・男女別（線の太さ）</p><svg id="lgflow" viewBox="0 0 120 74" aria-hidden="true"></svg></div>
-      <div class="lg lg-disc"><h3>円盤の面積</h3><p>その業種の中で、そのレンジにいる人の割合</p><svg id="lgdisc" viewBox="0 0 150 44" aria-hidden="true"></svg></div>
-      <div class="lg lg-band"><h3>業種ごとの給与レンジ</h3><p>そのレンジで給与をもらっている人数（業種内での割合）</p><div id="lgband" role="group" aria-label="給与レンジ"></div></div>
-    </div>
-    <div class="chart"><svg id="svg" viewBox="0 0 1200 810" role="img" aria-label="業種別の就労人数（男女別）と給与階級別の構成"></svg></div>
-  </div>
+  <div class="view wideview" id="view"><canvas id="canvas" aria-label="14業種の給与レンジの円盤を積み重ねた立体"></canvas>
+    <div id="labels" aria-hidden="true"></div>
+    <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div>
+      <div class="fsex" id="fmale">男性</div><div class="fsex" id="ffemale">女性</div></div>
+    <div class="viewbtns"><button id="pair" type="button" aria-pressed="false" hidden>男女を並べる</button><button id="reset" type="button" hidden>全体に戻る</button></div></div>
+  <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
   <footer>
-    <div class="fnote"><span>業種をクリック（タップ）すると、その業種だけを画面中央に拡大し、給与レンジごとの人数と割合を表示します。凡例でレンジを選ぶと、全業種でそのレンジの割合を比べられます。表示中の年や業種はURLに反映されるので、そのままリンクで共有できます。</span>
-    <span>線の太さは人数に比例します。細すぎて太さで表せない線は点線にしています。元の統計表に数値がない層は「該当なし」と表示し、0人として扱っています。</span>
-    <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（業種別・給与階級別、1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="https://www.e-stat.go.jp/dbview?sid=0004009620">e-Stat 統計表 0004009620</a> を <a href="https://github.com/dataofjapan/data-of-japan/tree/main/apps/society/work-category/public/data">data-of-japan/work-category</a> の配信データ経由で使用。</span></div>
+    <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
+    <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="object/">1業種ずつ見る</a></span></div>
     <div class="credit">制作：<a href="https://notation.co.jp/">矢崎裕一</a></div>
   </footer>
 </main>
-<div id="zoom" hidden>
-  <div id="zcard" role="dialog" aria-modal="true" aria-labelledby="zname">
-    <div class="zhead">
-      <div><h2 id="zname"></h2><p id="zmeta"></p></div>
-      <button id="zclose" type="button" aria-label="閉じる">×</button>
-    </div>
-    <dl id="zstats"></dl>
-    <svg id="zsvg" role="img" aria-label="選んだ業種の給与レンジ別の人数と割合"></svg>
-    <p id="zlegend"></p>
-    <div id="ztop"></div>
-    <div class="zctl">
-      <button id="zprev" type="button">‹ 前の業種</button>
-      <div class="seg" id="zsex" role="group" aria-label="円盤の対象">
-        <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button><button type="button" data-s="compare">男女を並べる</button>
-      </div>
-      <div class="zyear"><button id="zym" type="button" aria-label="前の年">‹</button><b id="zyl"></b><button id="zyp" type="button" aria-label="次の年">›</button></div>
-      <button id="znext" type="button">次の業種 ›</button>
-    </div>
-  </div>
-</div>
 <script src="vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="js/main.js?v=b6eff502"></script>
+<script type="module" src="objects/objects.js?v=8cc331d4"></script>
 </body>
 </html>

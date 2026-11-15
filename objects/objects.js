@@ -35,7 +35,7 @@ const shortBandLabel = (band) => (band === 0 ? '100万以下' : band === BAND_CO
 const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
 async function start() {
-  const data = await loadData('../data/salary.json');
+  const data = await loadData();
   const industries = data.industries;
   const count = industries.length;
   const fromUrl = readUrlState(data);

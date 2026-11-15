@@ -14,7 +14,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const radiusOf = (share) => Math.sqrt(share / DISC.maxShare);
 
 async function start() {
-  const data = await loadData('../data/salary.json');
+  const data = await loadData();
   const fromUrl = readUrlState(data);
   const state = {
     industryIndex: fromUrl.industryIndex ?? 0,

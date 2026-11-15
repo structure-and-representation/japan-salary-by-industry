@@ -1,5 +1,4 @@
 /* 立体の試作ページだけのスタイル。共通の見た目は ../css/style.css */
-.proto{font-size:12px;font-weight:700;margin-left:12px;padding:2px 8px;border:1px solid var(--ink-faint);border-radius:10px;color:var(--ink-soft);vertical-align:middle;letter-spacing:.08em}
 #industry{max-width:min(22em,60vw)}
 #prev,#next{padding:4px 10px}
 .stage{display:flex;flex-wrap:wrap;gap:20px 28px;align-items:stretch}

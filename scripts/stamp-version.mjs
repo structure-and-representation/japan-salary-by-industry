@@ -29,9 +29,9 @@ async function filesIn(dir, extensions) {
 
 // ページごとの設定。modules は importmap に載せるスクリプトの置き場所
 const PAGES = [
-  { html: 'index.html', modules: ['js'] },
-  { html: 'object/index.html', modules: ['js', 'object'], three: true },
-  { html: 'objects/index.html', modules: ['js', 'object', 'objects'], three: true },
+  { html: 'index.html', modules: ['js', 'object', 'objects'], three: true }, // 14業種の立体（トップ）
+  { html: 'object/index.html', modules: ['js', 'object'], three: true }, // 1業種の立体
+  { html: '2d/index.html', modules: ['js'] }, // 平面版
 ];
 const THREE_FILES = {
   three: 'vendor/three/three.module.min.js',

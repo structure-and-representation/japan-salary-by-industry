@@ -1,7 +1,10 @@
 // データの読み込みと、データから導く値。
 import { SORT, LOW_SHARE_BANDS, INDUSTRY_LABELS } from './config.js';
 
-export async function loadData(url = 'data/salary.json') {
+/** データの場所。どのページから読み込まれても同じファイルを指すよう、このスクリプトの位置から決める */
+const DATA_URL = new URL('../data/salary.json', import.meta.url).href.split('?')[0];
+
+export async function loadData(url = DATA_URL) {
   // HTML と同じ版のデータを読む（版の番号は scripts/stamp-version.mjs が HTML に書く）
   const build = document.querySelector('meta[name="build"]')?.content;
   const res = await fetch(build ? `${url}?v=${build}` : url);
