@@ -205,7 +205,7 @@ export function setupYearPicker(data, onPick) {
   const pickByHand = (yearIndex) => { if (timer) stopPlay(); onPick(yearIndex); };
   slider.max = lastYear;
   ticks.innerHTML = data.years
-    .map((year, i) => `<span class="yt"><i></i><button type="button" tabindex="-1" data-y="${i}" aria-label="${year}年分">${year}</button></span>`).join('');
+    .map((year, i) => `<span class="yt"><i></i><button type="button" tabindex="-1" data-y="${i}" aria-label="${year}年分">'${String(year).slice(-2)}</button></span>`).join('');
   ticks.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) pickByHand(+b.dataset.y); });
   slider.oninput = (e) => pickByHand(+e.target.value);
   return (yearIndex) => {

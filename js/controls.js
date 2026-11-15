@@ -17,7 +17,7 @@ export function createControls({ data, store }) {
   slider.max = lastYear;
   const ticks = $('yticks');
   ticks.innerHTML = data.years
-    .map((year, i) => `<span class="yt"><i></i><button type="button" tabindex="-1" data-y="${i}" aria-label="${year}年分">${year}</button></span>`)
+    .map((year, i) => `<span class="yt"><i></i><button type="button" tabindex="-1" data-y="${i}" aria-label="${year}年分">'${String(year).slice(-2)}</button></span>`)
     .join('');
   ticks.addEventListener('click', (e) => {
     const button = e.target.closest('button');

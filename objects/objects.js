@@ -532,15 +532,21 @@ async function start() {
   /** wave: 端の業種から順に、円盤を落として積む（最初の表示） */
   function update(patch, { wave = false } = {}) {
     Object.assign(state, patch);
+    const drop = wave && !reducedMotion;
     stacks.forEach((stack, i) => {
       // 男女を並べている業種の積み木は、男性を表す
       const sex = comparing() && state.focus === i ? SEX.MALE : state.sex;
-      stack.setRadii(radii(industries[i], sex), { drop: wave && !reducedMotion, instant: reducedMotion, startDelay: i * WAVE_DELAY });
-      // 寄っている間は、その業種だけを残す
-      stack.setVisible(state.focus === null || state.focus === i, reducedMotion);
+      // 最初の表示では、全体なら端の業種から順に、寄っているならその業種をすぐに積む
+      const startDelay = state.focus === null ? i * WAVE_DELAY : 0;
+      stack.setRadii(radii(industries[i], sex), { drop, instant: reducedMotion, startDelay });
+      // 寄っている間は、その業種だけを残す。最初の表示では、ほかの業種は初めから出さない
+      stack.setVisible(state.focus === null || state.focus === i, reducedMotion || wave);
     });
-    if (comparing()) mate.setRadii(radii(industries[state.focus], SEX.FEMALE), { instant: reducedMotion || !mate.visible });
-    mate.setVisible(comparing(), reducedMotion);
+    if (comparing()) {
+      // 男女を並べた状態で開いたときは、女性の積み木も男性と同じように上から落として積む
+      mate.setRadii(radii(industries[state.focus], SEX.FEMALE), { drop, instant: reducedMotion || (!drop && !mate.visible) });
+    }
+    mate.setVisible(comparing(), reducedMotion || wave);
     mate.setColors(state.scheme);
     renderText();
     writeUrl();
@@ -656,7 +662,11 @@ async function start() {
   arrange();
   camera.position.copy(home.position);
   controls.target.copy(home.target);
-  if (state.focus !== null) goFocus(state.focus);
+  if (state.focus !== null) {
+    goFocus(state.focus);
+    // 最初から寄った状態で開いたときは、積み木を初めからその位置に置く（横に滑らせない）
+    stacks[state.focus].group.position.copy(goals[state.focus]);
+  }
   frame();
 
   /** 配色やテーマ（明暗）が変わったとき、色に関わるものをすべて塗り直す */
