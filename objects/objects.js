@@ -28,6 +28,7 @@ const FOCUS_HEIGHT_RATIO = 0.5; // 積み木の高さが、表示領域の高さ
 const FOCUS_WIDTH_RATIO = 0.42; // 積み木の幅が、表示領域の幅に占める割合の上限
 const NARROW_VIEW = 620; // 表示領域の幅がこれより狭いとき、詰めた組み方にする
 const LABEL_GAP = 30; // 積み木の端から、層のラベルまでの距離（px）
+const COMPARE_AZIMUTH_RANGE = 1.0; // 男女を並べたとき、左右に回せる角度（ラジアン）。左右が入れ替わらない範囲にする
 const LABEL_MARGIN = 6; // 業種名と、ほかの積み木との間に空ける余白（px）
 /** 幅が狭いときの給与レンジ名 */
 const shortBandLabel = (band) => (band === 0 ? '100万以下' : band === BAND_COUNT - 1 ? '800万超' : `${band}00〜${band + 1}00万`);
@@ -44,14 +45,17 @@ async function start() {
     sex: fromUrl.sex ?? SEX.TOTAL,
     scheme: fromUrl.scheme ?? storedScheme(),
     focus: fromUrl.industryIndex ?? null, // 寄っている業種の添字
+    compare: fromUrl.compare ?? false, // 寄ったとき、男性と女性の積み木を左右に並べるか
     hover: null, // { industry, band }
   };
 
   // 人数の尺度: 全業種・全年・男女計で最大の層を基準にする。年や対象を替えても同じ尺度で比べられる
   const maxCount = Math.max(...industries.flatMap((d) => d.bands[SEX.TOTAL].flatMap((bands) => bands.map((v) => v ?? 0))));
-  const radii = (industry) => (state.size === 'count'
-    ? bandCounts(industry, state.sex, state.yearIndex).map((n) => COUNT_MAX_RADIUS * Math.sqrt(n / maxCount))
-    : bandShares(industry, state.sex, state.yearIndex).map((s) => SHARE_MAX_RADIUS * Math.sqrt(s / DISC.maxShare)));
+  const radii = (industry, sex) => (state.size === 'count'
+    ? bandCounts(industry, sex, state.yearIndex).map((n) => COUNT_MAX_RADIUS * Math.sqrt(n / maxCount))
+    : bandShares(industry, sex, state.yearIndex).map((s) => SHARE_MAX_RADIUS * Math.sqrt(s / DISC.maxShare)));
+  /** 寄った業種で男女を並べているか */
+  const comparing = () => state.focus !== null && state.compare;
 
   // ---- 場面
   const canvas = $('canvas');
@@ -65,6 +69,13 @@ async function start() {
     scene.add(stack.group);
     return stack;
   });
+  // 男女を並べるときに使う、もう1つの積み木（女性）。ふだんは隠しておく
+  const mate = createStack(geometry, { industry: -1 });
+  mate.setVisible(false, true);
+  scene.add(mate.group);
+  // 積み木の置き場所。home は格子の位置、goal はいま向かっている位置（男女を並べる間は左右にずれる）
+  const homes = stacks.map(() => new THREE.Vector3());
+  const goals = stacks.map(() => new THREE.Vector3());
 
   // 画角を狭くして、端の積み木が傾いて見えるのを抑える
   const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 400);
@@ -86,12 +97,16 @@ async function start() {
     dirty = true;
     if (reducedMotion) { camera.position.copy(position); controls.target.copy(target); flight = null; } else flight = { position, target };
   };
-  // 幅が狭いとき、寄った積み木を左へずらして、右にラベルの場所を空ける
-  let viewShift = 0;
-  const targetViewShift = () => (state.focus !== null && isNarrow() ? 0.2 : 0);
+  // 幅が狭いとき、寄った積み木を画面の中でずらして、ラベルの場所を空ける。
+  // 1つだけなら左へ（右にラベル）、男女を並べるなら上へ（下にラベル）。値は表示領域に対する割合
+  const viewShift = { x: 0, y: 0 };
+  const targetViewShift = () => {
+    if (state.focus === null || !isNarrow()) return { x: 0, y: 0 };
+    return state.compare ? { x: 0, y: 0.09 } : { x: 0.2, y: 0 };
+  };
   function applyViewShift() {
-    if (Math.abs(viewShift) < 0.001) camera.clearViewOffset();
-    else camera.setViewOffset(viewSize.w, viewSize.h, viewShift * viewSize.w, 0, viewSize.w, viewSize.h);
+    if (Math.abs(viewShift.x) < 0.001 && Math.abs(viewShift.y) < 0.001) camera.clearViewOffset();
+    else camera.setViewOffset(viewSize.w, viewSize.h, viewShift.x * viewSize.w, viewShift.y * viewSize.h, viewSize.w, viewSize.h);
   }
 
   // ---- 並べ方と全体の視点
@@ -108,7 +123,9 @@ async function start() {
     stacks.forEach((stack, i) => {
       const column = i % columns;
       const row = Math.floor(i / columns);
-      stack.group.position.set((column - (columns - 1) / 2) * CELL_WIDTH, 0, (row - (rows - 1) / 2) * CELL_DEPTH);
+      homes[i].set((column - (columns - 1) / 2) * CELL_WIDTH, 0, (row - (rows - 1) / 2) * CELL_DEPTH);
+      goals[i].copy(homes[i]);
+      stack.group.position.copy(homes[i]);
     });
     // 全体が収まる距離: 横幅と、見下ろしたときの奥行き＋高さの両方で決める
     const width = columns * CELL_WIDTH + 0.6;
@@ -122,17 +139,48 @@ async function start() {
     const target = new THREE.Vector3(0, 0, CELL_DEPTH * 0.16);
     home = { position: target.clone().addScaledVector(direction, distance), target };
   }
-  const goHome = () => flyTo(home.position.clone(), home.target.clone());
+  const goHome = () => { releasePair(); flyTo(home.position.clone(), home.target.clone()); };
+  /** 全部の積み木を格子の位置へ戻し、回せる範囲の制限を外す */
+  function releasePair() {
+    goals.forEach((goal, i) => goal.copy(homes[i]));
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
+    dirty = true;
+  }
   function goFocus(index) {
-    const at = stacks[index].group.position;
+    const at = homes[index];
     const target = new THREE.Vector3(at.x, STACK_HEIGHT * 0.5, at.z);
-    // 積み木が表示領域に対して決めた大きさになる距離まで、いま見ている方向のまま寄る
-    const pxPerUnit = Math.min((FOCUS_HEIGHT_RATIO * viewSize.h) / STACK_HEIGHT, (FOCUS_WIDTH_RATIO * viewSize.w) / 2);
-    const distance = viewSize.h / 2 / (pxPerUnit * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
     const direction = camera.position.clone().sub(controls.target).normalize();
     // 真上に近い向きから寄ると層が重なって見えるので、見下ろす角度を抑える
     direction.y = Math.min(direction.y, 0.5);
     direction.normalize();
+    releasePair();
+    // 積み木が表示領域に対して決めた大きさになる距離まで、いま見ている方向のまま寄る
+    let pxPerUnit = Math.min((FOCUS_HEIGHT_RATIO * viewSize.h) / STACK_HEIGHT, (FOCUS_WIDTH_RATIO * viewSize.w) / 2);
+    if (state.compare) {
+      // 男女を並べる: 左に男性、右に女性を置く。
+      // 広いときは間にラベルの列を置けるだけ離す。狭いときは詰めて並べ、ラベルは下に置く
+      const stackWidth = 2 * 0.95;
+      let offset;
+      if (isNarrow()) {
+        const gap = 0.3;
+        pxPerUnit = (viewSize.w * 0.92) / (2 * stackWidth + gap);
+        offset = (stackWidth + gap) / 2;
+      } else {
+        const columnWidth = compareColumnWidth() + LABEL_GAP * 2;
+        // 遠近法で手前が大きく見えるぶん、余裕を持たせる
+        pxPerUnit = 0.84 * Math.min((FOCUS_HEIGHT_RATIO * viewSize.h) / STACK_HEIGHT, (viewSize.w - columnWidth - 24) / (2 * stackWidth));
+        offset = columnWidth / 2 / pxPerUnit + stackWidth / 2;
+      }
+      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), direction).normalize(); // 画面の右にあたる向き
+      goals[index].copy(at).addScaledVector(right, -offset);
+      mate.group.position.copy(at).addScaledVector(right, offset);
+      // 左右が入れ替わらないよう、回せる範囲を限る
+      const azimuth = Math.atan2(direction.x, direction.z);
+      controls.minAzimuthAngle = azimuth - COMPARE_AZIMUTH_RANGE;
+      controls.maxAzimuthAngle = azimuth + COMPARE_AZIMUTH_RANGE;
+    }
+    const distance = viewSize.h / 2 / (pxPerUnit * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
     flyTo(target.clone().addScaledVector(direction, distance), target);
   }
 
@@ -187,63 +235,131 @@ async function start() {
     });
   }
 
-  // ---- 寄ったときの表示。左に業種の概要、右に各層のラベルを、積み木の位置に合わせて置く
+  // ---- 寄ったときの表示。積み木の位置に合わせて、概要と各層のラベルを置く
+  //   1つだけ: 左に概要、右に各層のラベル
+  //   男女を並べる: 左に男性、右に女性の積み木。その間に各層のラベル、上に概要
   const focusUi = $('focusui');
   const headEl = $('fhead');
   const leads = $('leads');
+  const sexCaptions = [$('fmale'), $('ffemale')];
+  const newLine = () => { const line = document.createElementNS('http://www.w3.org/2000/svg', 'line'); leads.append(line); return line; };
   const rows = Array.from({ length: BAND_COUNT }, (unused, band) => {
     const el = document.createElement('div');
     el.className = 'frow';
     el.dataset.b = band;
     $('frows').append(el);
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    leads.append(line);
-    return { el, line };
+    return { el, line: newLine(), line2: newLine() };
   });
+  /** 男女を並べるときの、中央のラベルの列の幅（px）。広いとき用。CSS の .compare .frow の幅と合わせる */
+  const compareColumnWidth = () => 392;
+
+  /** 積み木の各層が画面上で占める形と、左右の端の位置 */
+  function stackOnScreen(stack) {
+    const { x, z } = stack.group.position;
+    // カメラから見て右向きの、床に沿った方向
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+    const tilt = Math.abs(camera.getWorldDirection(new THREE.Vector3()).y); // 見下ろす角度の正弦 = 楕円のつぶれ具合
+    const layers = stack.discs.map((disc, band) => {
+      const r = Math.max(disc.radius, 0.02);
+      const y = restY(band) + DISC_HEIGHT / 2;
+      const rightEdge = toScreen(x + right.x * r, y, z + right.z * r);
+      const leftEdge = toScreen(x - right.x * r, y, z - right.z * r);
+      const top = toScreen(x, restY(band) + DISC_HEIGHT, z);
+      const bottom = toScreen(x, restY(band), z);
+      const rx = (rightEdge.x - leftEdge.x) / 2;
+      return { rightEdge, leftEdge, cx: (top.x + bottom.x) / 2, topY: top.y, bottomY: bottom.y, rx, ry: rx * tilt, exists: disc.targetRadius > 0.001 };
+    });
+    // 引き出し線が円盤の上を横切らないよう、線は「その高さで見えている輪郭」から出す
+    const reach = (layer, y) => {
+      if (!layer.exists) return null;
+      const outside = y < layer.topY ? layer.topY - y : y > layer.bottomY ? y - layer.bottomY : 0;
+      return outside >= layer.ry ? null : layer.rx * Math.sqrt(1 - (outside / layer.ry) ** 2);
+    };
+    return {
+      layers,
+      /** 高さ y で、いちばん右（side=1）または左（side=-1）に見えている輪郭の x */
+      silhouetteX(y, side) {
+        const xs = layers.map((layer) => { const half = reach(layer, y); return half === null ? null : layer.cx + side * half; }).filter((v) => v !== null);
+        return xs.length ? (side > 0 ? Math.max(...xs) : Math.min(...xs)) : null;
+      },
+    };
+  }
+  /** ラベルの行を縦に等間隔に置く高さを返す。層の見かけの間隔が狭いときは、読める行間まで広げる */
+  function rowYs(layerYs, rowHeight) {
+    const spacing = Math.max(Math.abs(layerYs[0] - layerYs[BAND_COUNT - 1]) / (BAND_COUNT - 1), rowHeight + 3);
+    const middle = (layerYs[0] + layerYs[BAND_COUNT - 1]) / 2;
+    return layerYs.map((unused, band) => middle - (band - (BAND_COUNT - 1) / 2) * spacing);
+  }
+  const setLine = (line, x1, y1, x2, y2, shown) => {
+    line.style.display = shown ? '' : 'none';
+    if (shown) { line.setAttribute('x1', x1); line.setAttribute('y1', y1); line.setAttribute('x2', x2); line.setAttribute('y2', y2); }
+  };
+
   function placeFocusUi() {
     const focused = state.focus !== null;
     focusUi.classList.toggle('on', focused);
     focusUi.classList.toggle('narrow', isNarrow());
+    focusUi.classList.toggle('compare', comparing());
     if (!focused) return;
-    const stack = stacks[state.focus];
-    const box = screenBox(stack);
-    const { x, z } = stack.group.position;
-    // カメラから見て右向きの、床に沿った方向。各層の右端はこの向きにある
-    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
-    const edges = stack.discs.map((disc, band) => {
-      const r = Math.max(disc.radius, 0.02);
-      return toScreen(x + right.x * r, restY(band) + DISC_HEIGHT / 2, z + right.z * r);
-    });
-    // 各円盤が画面上で占める形（上面と底面の楕円と、その間）。引き出し線が円盤の上を横切らないよう、
-    // 線は「その高さで、いちばん右に見えている輪郭」から出す
-    const tilt = Math.abs(camera.getWorldDirection(new THREE.Vector3()).y); // 見下ろす角度の正弦 = 楕円のつぶれ具合
-    const shapes = stack.discs.map((disc, band) => {
-      const top = toScreen(x, restY(band) + DISC_HEIGHT, z);
-      const bottom = toScreen(x, restY(band), z);
-      const rx = edges[band].x - (top.x + bottom.x) / 2;
-      return { cx: (top.x + bottom.x) / 2, topY: top.y, bottomY: bottom.y, rx, ry: rx * tilt, exists: disc.targetRadius > 0.001 };
-    });
-    const silhouetteX = (y) => Math.max(...shapes.map((s) => {
-      if (!s.exists) return -Infinity;
-      const outside = y < s.topY ? s.topY - y : y > s.bottomY ? y - s.bottomY : 0;
-      return outside >= s.ry ? -Infinity : s.cx + s.rx * Math.sqrt(1 - (outside / s.ry) ** 2);
-    }));
-    // ラベルは縦に等間隔。層の見かけの間隔が狭いときは、読める行間まで広げる
+    const main = stacks[state.focus];
     const rowHeight = rows[0].el.offsetHeight;
-    const spacing = Math.max(Math.abs(edges[0].y - edges[BAND_COUNT - 1].y) / (BAND_COUNT - 1), rowHeight + 3);
-    const middleY = (edges[0].y + edges[BAND_COUNT - 1].y) / 2;
-    const labelX = Math.min(Math.max(...edges.map((p) => p.x)) + LABEL_GAP, viewSize.w - rows[0].el.offsetWidth - 8);
-    rows.forEach(({ el, line }, band) => {
-      const y = middleY - (band - (BAND_COUNT - 1) / 2) * spacing;
-      el.style.transform = `translate(${labelX}px,${y - rowHeight / 2}px)`;
-      line.setAttribute('x1', Math.max(edges[band].x, silhouetteX(edges[band].y)) + 4); line.setAttribute('y1', edges[band].y);
-      line.setAttribute('x2', labelX - 6); line.setAttribute('y2', y);
-      line.style.display = stack.discs[band].targetRadius > 0.001 ? '' : 'none';
+    const rowWidth = rows[0].el.offsetWidth;
+
+    if (!state.compare) {
+      const shape = stackOnScreen(main);
+      const edges = shape.layers.map((layer) => layer.rightEdge);
+      const ys = rowYs(edges.map((p) => p.y), rowHeight);
+      const labelX = Math.min(Math.max(...edges.map((p) => p.x)) + LABEL_GAP, viewSize.w - rowWidth - 8);
+      rows.forEach(({ el, line, line2 }, band) => {
+        el.style.transform = `translate(${labelX}px,${ys[band] - rowHeight / 2}px)`;
+        const from = Math.max(edges[band].x, shape.silhouetteX(edges[band].y, 1) ?? edges[band].x);
+        setLine(line, from + 4, edges[band].y, labelX - 6, ys[band], shape.layers[band].exists);
+        setLine(line2, 0, 0, 0, 0, false);
+      });
+      // 概要は、広いときは積み木の左に右寄せで、狭いときは左上に置く。
+      // 床の影は左下へ伸びるので、積み木の上端にそろえて影を避ける
+      const box = screenBox(main);
+      headEl.style.transform = isNarrow()
+        ? 'translate(12px,12px)'
+        : `translate(${Math.max(12, box.left - LABEL_GAP - headEl.offsetWidth)}px,${Math.max(12, box.top)}px)`;
+      return;
+    }
+
+    // 「男性」「女性」は、それぞれの積み木の真上に置く
+    [main, mate].forEach((stack, i) => {
+      const box = screenBox(stack);
+      sexCaptions[i].style.transform = `translate(${(box.left + box.right) / 2 - sexCaptions[i].offsetWidth / 2}px,${box.top - sexCaptions[i].offsetHeight - 8}px)`;
     });
-    // 概要は、広いときは積み木の左に右寄せで、狭いときは左上に置く
-    if (isNarrow()) headEl.style.transform = 'translate(12px,12px)';
-    // 床の影は左下へ伸びるので、概要は積み木の上端にそろえて影を避ける
-    else headEl.style.transform = `translate(${Math.max(12, box.left - LABEL_GAP - headEl.offsetWidth)}px,${Math.max(12, box.top)}px)`;
+    if (isNarrow()) {
+      // 狭いとき: ラベルは積み木の下に表としてまとめる（引き出し線はなし）。概要は左上
+      const step = rowHeight + 2;
+      const top = viewSize.h - BAND_COUNT * step - 50;
+      rows.forEach(({ el, line, line2 }, band) => {
+        el.style.transform = `translate(${(viewSize.w - rowWidth) / 2}px,${top + (BAND_COUNT - 1 - band) * step}px)`;
+        setLine(line, 0, 0, 0, 0, false);
+        setLine(line2, 0, 0, 0, 0, false);
+      });
+      headEl.style.transform = 'translate(12px,12px)';
+      return;
+    }
+
+    // 広いとき: 左が男性（寄った業種の積み木）、右が女性（もう1つの積み木）。その間にラベルの列
+    const left = stackOnScreen(main);
+    const right = stackOnScreen(mate);
+    const leftEdges = left.layers.map((layer) => layer.rightEdge);
+    const rightEdges = right.layers.map((layer) => layer.leftEdge);
+    const ys = rowYs(leftEdges.map((p, band) => (p.y + rightEdges[band].y) / 2), rowHeight);
+    const centerX = (Math.max(...leftEdges.map((p) => p.x)) + Math.min(...rightEdges.map((p) => p.x))) / 2;
+    const rowLeft = centerX - rowWidth / 2;
+    rows.forEach(({ el, line, line2 }, band) => {
+      el.style.transform = `translate(${rowLeft}px,${ys[band] - rowHeight / 2}px)`;
+      const fromLeft = Math.max(leftEdges[band].x, left.silhouetteX(leftEdges[band].y, 1) ?? leftEdges[band].x);
+      const fromRight = Math.min(rightEdges[band].x, right.silhouetteX(rightEdges[band].y, -1) ?? rightEdges[band].x);
+      setLine(line, fromLeft + 4, leftEdges[band].y, rowLeft - 4, ys[band], left.layers[band].exists);
+      setLine(line2, fromRight - 4, rightEdges[band].y, rowLeft + rowWidth + 4, ys[band], right.layers[band].exists);
+    });
+    // 概要は、ラベルの列の上に中央寄せで置く
+    headEl.style.transform = `translate(${centerX - headEl.offsetWidth / 2}px,${Math.max(8, Math.min(...ys) - rowHeight / 2 - headEl.offsetHeight - 18)}px)`;
   }
 
   // ---- 状態 → 立体と文字
@@ -255,6 +371,7 @@ async function start() {
       stack.setHighlight((band) => state.hover !== null && state.hover.industry === i && (state.focus !== i || state.hover.band === band));
     });
     const hoverBand = state.hover && state.hover.industry === state.focus ? state.hover.band : null;
+    mate.setHighlight((band) => band === hoverBand);
     rows.forEach(({ el }, band) => el.classList.toggle('on', band === hoverBand));
     canvas.style.cursor = state.hover ? 'pointer' : '';
   }
@@ -272,18 +389,41 @@ async function start() {
     document.querySelectorAll('#sex button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.s === sex));
     document.querySelectorAll('#size button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === state.size));
     $('reset').hidden = state.focus === null;
+    $('pair').hidden = state.focus === null;
+    $('pair').setAttribute('aria-pressed', state.compare);
     if (state.focus !== null) {
       const industry = industries[state.focus];
-      const shares = bandShares(industry, sex, y);
-      const counts = industry.bands[sex][y];
-      headEl.innerHTML = `<h2>${industry.displayName}</h2><p>${data.years[y]}年分・${SEX_LABELS[sex]}</p>
-        <dl><div><dt>平均給与</dt><dd>${formatSalary(industry.salaryAvg[sex][y])}</dd></div>
-        <div><dt>就労人数</dt><dd>${formatWorkers(industry.workers[sex][y])}</dd></div></dl>`;
-      rows.forEach(({ el }, band) => {
-        const missing = counts[band] === null;
-        el.innerHTML = `<i style="background:${bandColor(state.scheme, band)}"></i><span class="r">${isNarrow() ? shortBandLabel(band) : data.bandLabels[band]}</span>`
-          + `<b>${missing ? '—' : formatPercent(shares[band])}</b><span class="n">${missing ? '該当なし' : formatWorkers(counts[band])}</span>`;
-      });
+      const swatch = (band) => `<i style="background:${bandColor(state.scheme, band)}"></i>`;
+      const range = (band) => (isNarrow() ? shortBandLabel(band) : data.bandLabels[band]);
+      // 元の統計表に数値がない層は「該当なし」
+      const cells = (s) => {
+        const shares = bandShares(industry, s, y);
+        const counts = industry.bands[s][y];
+        return (band) => ({
+          percent: counts[band] === null ? '—' : formatPercent(shares[band]),
+          count: counts[band] === null ? '該当なし' : formatWorkers(counts[band]),
+        });
+      };
+      const stat = (title, format, values) => (state.compare
+        ? `<div><dt>${title}</dt><dd>男性 ${format(values[SEX.MALE][y])}<span>/</span>女性 ${format(values[SEX.FEMALE][y])}</dd></div>`
+        : `<div><dt>${title}</dt><dd>${format(values[sex][y])}</dd></div>`);
+      headEl.innerHTML = `<h2>${industry.displayName}</h2><p>${data.years[y]}年分・${state.compare ? '男女別' : SEX_LABELS[sex]}</p>
+        <dl>${stat('平均給与', formatSalary, industry.salaryAvg)}${stat('就労人数', formatWorkers, industry.workers)}</dl>`;
+      if (state.compare) {
+        const male = cells(SEX.MALE);
+        const female = cells(SEX.FEMALE);
+        rows.forEach(({ el }, band) => {
+          const m = male(band);
+          const f = female(band);
+          el.innerHTML = `<span class="n">${m.count}</span><b>${m.percent}</b><span class="r">${swatch(band)}${range(band)}</span><b>${f.percent}</b><span class="n">${f.count}</span>`;
+        });
+      } else {
+        const one = cells(sex);
+        rows.forEach(({ el }, band) => {
+          const c = one(band);
+          el.innerHTML = `${swatch(band)}<span class="r">${range(band)}</span><b>${c.percent}</b><span class="n">${c.count}</span>`;
+        });
+      }
     }
     applyHighlight();
   }
@@ -293,6 +433,7 @@ async function start() {
     if (state.yearIndex !== data.years.length - 1) params.set('year', data.years[state.yearIndex]);
     if (state.sex !== SEX.TOTAL) params.set('sex', SEX_KEYS[state.sex]);
     if (state.focus !== null) params.set('industry', industries[state.focus].code);
+    if (comparing()) params.set('compare', '1');
     const hash = params.toString();
     try { history.replaceState(null, '', location.pathname + (hash ? `#${hash}` : '')); } catch (e) { /* 書き換えられない環境でも表示は続ける */ }
   }
@@ -300,10 +441,15 @@ async function start() {
   function update(patch, { wave = false } = {}) {
     Object.assign(state, patch);
     stacks.forEach((stack, i) => {
-      stack.setRadii(radii(industries[i]), { drop: wave && !reducedMotion, instant: reducedMotion, startDelay: i * WAVE_DELAY });
+      // 男女を並べている業種の積み木は、男性を表す
+      const sex = comparing() && state.focus === i ? SEX.MALE : state.sex;
+      stack.setRadii(radii(industries[i], sex), { drop: wave && !reducedMotion, instant: reducedMotion, startDelay: i * WAVE_DELAY });
       // 寄っている間は、その業種だけを残す
       stack.setVisible(state.focus === null || state.focus === i, reducedMotion);
     });
+    if (comparing()) mate.setRadii(radii(industries[state.focus], SEX.FEMALE), { instant: reducedMotion || !mate.visible });
+    mate.setVisible(comparing(), reducedMotion);
+    mate.setColors(state.scheme);
     renderText();
     writeUrl();
   }
@@ -313,7 +459,15 @@ async function start() {
   }
 
   // ---- 操作
-  document.querySelectorAll('#sex button').forEach((b) => { b.onclick = () => update({ sex: +b.dataset.s }); });
+  // 対象を選び直したら、男女を並べるのはやめて、その対象の積み木に戻す
+  document.querySelectorAll('#sex button').forEach((b) => {
+    b.onclick = () => {
+      const wasComparing = comparing();
+      update({ sex: +b.dataset.s, compare: false });
+      if (wasComparing) goFocus(state.focus);
+    };
+  });
+  $('pair').onclick = () => { update({ compare: !state.compare }); goFocus(state.focus); };
   document.querySelectorAll('#size button').forEach((b) => { b.onclick = () => update({ size: b.dataset.v }); });
   $('reset').onclick = () => setFocus(null);
   $('bandlegend').innerHTML = Array.from({ length: BAND_COUNT }, (unused, i) => BAND_COUNT - 1 - i)
@@ -326,8 +480,11 @@ async function start() {
     const rect = canvas.getBoundingClientRect();
     pointer.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(stacks.flatMap((s) => s.meshes))[0];
-    return hit ? { industry: hit.object.userData.industry, band: hit.object.userData.band } : null;
+    const hit = raycaster.intersectObjects([...stacks.flatMap((s) => s.meshes), ...mate.meshes])[0];
+    if (!hit) return null;
+    // もう1つの積み木（女性）は、寄っている業種のものとして扱う
+    const industry = hit.object.userData.industry === -1 ? state.focus : hit.object.userData.industry;
+    return { industry, band: hit.object.userData.band };
   };
   const sameHover = (a, b) => (a === null || b === null ? a === b : a.industry === b.industry && a.band === b.band);
   const setHover = (hover) => { if (!sameHover(hover, state.hover)) { state.hover = hover; applyHighlight(); } };
@@ -353,7 +510,17 @@ async function start() {
   function frame() {
     const dt = Math.min(clock.getDelta(), 0.05);
     let moving = false;
-    stacks.forEach((stack) => { if (stack.step(dt)) moving = true; });
+    stacks.forEach((stack, i) => {
+      if (stack.step(dt)) moving = true;
+      // 置き場所へなめらかに動かす
+      const position = stack.group.position;
+      if (position.distanceToSquared(goals[i]) > 1e-8) {
+        if (reducedMotion || position.distanceTo(goals[i]) < 0.002) position.copy(goals[i]);
+        else position.lerp(goals[i], Math.min(1, dt * 7));
+        moving = true;
+      }
+    });
+    if (mate.step(dt)) moving = true;
     if (flight) {
       const k = Math.min(1, dt * 5);
       camera.position.lerp(flight.position, k);
@@ -362,8 +529,11 @@ async function start() {
       moving = true;
     }
     const shiftGoal = targetViewShift();
-    if (viewShift !== shiftGoal) {
-      viewShift = reducedMotion || Math.abs(shiftGoal - viewShift) < 0.002 ? shiftGoal : viewShift + (shiftGoal - viewShift) * Math.min(1, dt * 6);
+    if (viewShift.x !== shiftGoal.x || viewShift.y !== shiftGoal.y) {
+      for (const axis of ['x', 'y']) {
+        const gap = shiftGoal[axis] - viewShift[axis];
+        viewShift[axis] = reducedMotion || Math.abs(gap) < 0.002 ? shiftGoal[axis] : viewShift[axis] + gap * Math.min(1, dt * 6);
+      }
       applyViewShift();
       camera.updateProjectionMatrix();
       moving = true;

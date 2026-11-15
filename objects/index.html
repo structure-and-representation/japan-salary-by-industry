@@ -6,31 +6,31 @@
 <title>業種別 給与レンジの立体を並べる（試作）</title>
 <meta name="description" content="14業種の給与レンジの構成を、台の上に並べた積み木のような立体で見比べる試作。">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/style.css?v=cd9da74d">
-<link rel="stylesheet" href="../object/object.css?v=cd9da74d">
-<link rel="stylesheet" href="objects.css?v=cd9da74d">
-<meta name="build" content="cd9da74d">
+<link rel="stylesheet" href="../css/style.css?v=b6eff502">
+<link rel="stylesheet" href="../object/object.css?v=b6eff502">
+<link rel="stylesheet" href="objects.css?v=b6eff502">
+<meta name="build" content="b6eff502">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "../vendor/three/three.module.min.js?v=cd9da74d",
-  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=cd9da74d",
-  "../js/closeup.js": "../js/closeup.js?v=cd9da74d",
-  "../js/colors.js": "../js/colors.js?v=cd9da74d",
-  "../js/config.js": "../js/config.js?v=cd9da74d",
-  "../js/controls.js": "../js/controls.js?v=cd9da74d",
-  "../js/data.js": "../js/data.js?v=cd9da74d",
-  "../js/discs.js": "../js/discs.js?v=cd9da74d",
-  "../js/format.js": "../js/format.js?v=cd9da74d",
-  "../js/layout.js": "../js/layout.js?v=cd9da74d",
-  "../js/main.js": "../js/main.js?v=cd9da74d",
-  "../js/overview.js": "../js/overview.js?v=cd9da74d",
-  "../js/state.js": "../js/state.js?v=cd9da74d",
-  "../js/url.js": "../js/url.js?v=cd9da74d",
-  "../object/object.js": "../object/object.js?v=cd9da74d",
-  "../object/toy.js": "../object/toy.js?v=cd9da74d",
-  "./objects.js": "./objects.js?v=cd9da74d"
+  "three": "../vendor/three/three.module.min.js?v=b6eff502",
+  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=b6eff502",
+  "../js/closeup.js": "../js/closeup.js?v=b6eff502",
+  "../js/colors.js": "../js/colors.js?v=b6eff502",
+  "../js/config.js": "../js/config.js?v=b6eff502",
+  "../js/controls.js": "../js/controls.js?v=b6eff502",
+  "../js/data.js": "../js/data.js?v=b6eff502",
+  "../js/discs.js": "../js/discs.js?v=b6eff502",
+  "../js/format.js": "../js/format.js?v=b6eff502",
+  "../js/layout.js": "../js/layout.js?v=b6eff502",
+  "../js/main.js": "../js/main.js?v=b6eff502",
+  "../js/overview.js": "../js/overview.js?v=b6eff502",
+  "../js/state.js": "../js/state.js?v=b6eff502",
+  "../js/url.js": "../js/url.js?v=b6eff502",
+  "../object/object.js": "../object/object.js?v=b6eff502",
+  "../object/toy.js": "../object/toy.js?v=b6eff502",
+  "./objects.js": "./objects.js?v=b6eff502"
  }
 }
 </script>
@@ -56,8 +56,9 @@
   </div>
   <div class="view wideview" id="view"><canvas id="canvas" aria-label="14業種の給与レンジの円盤を積み重ねた立体"></canvas>
     <div id="labels" aria-hidden="true"></div>
-    <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div></div>
-    <button id="reset" type="button" hidden>全体に戻る</button></div>
+    <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div>
+      <div class="fsex" id="fmale">男性</div><div class="fsex" id="ffemale">女性</div></div>
+    <div class="viewbtns"><button id="pair" type="button" aria-pressed="false" hidden>男女を並べる</button><button id="reset" type="button" hidden>全体に戻る</button></div></div>
   <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
   <footer>
     <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
@@ -66,6 +67,6 @@
   </footer>
 </main>
 <script src="../vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="objects.js?v=cd9da74d"></script>
+<script type="module" src="objects.js?v=b6eff502"></script>
 </body>
 </html>

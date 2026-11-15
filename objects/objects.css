@@ -33,7 +33,30 @@
 #focusui.narrow .frow{grid-template-columns:auto 5.6em 3.6em 4.3em;font-size:10.5px;gap:0 3px;padding:0 3px}
 #focusui.narrow .frow b{font-size:11.5px}
 
-#reset[hidden]{display:none}
+/* 男女を並べるとき: 中央にラベルの列。左が男性、右が女性の数値 */
+.fsex{position:absolute;left:0;top:0;font-size:13px;font-weight:700;color:var(--ink-soft);letter-spacing:.1em;display:none}
+#focusui.compare .fsex{display:block}
+#focusui.compare #fhead{text-align:center;max-width:none}
+#focusui.compare #fhead dl{flex-direction:row;justify-content:center;gap:22px}
+#focusui.compare #fhead dd{font-size:14px;white-space:nowrap}
+#fhead dd span{color:var(--ink-faint);margin:0 6px;font-weight:500}
+#focusui.compare .frow{grid-template-columns:4.7em 4.3em 12.2em 4.3em 4.7em;width:392px;gap:0 4px;padding:1px 4px}
+#focusui.compare .frow .r{text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#focusui.compare .frow b:nth-of-type(2){text-align:left}
+#focusui.compare .frow .n:last-child{text-align:left}
+#focusui.compare.narrow #fhead{text-align:left;max-width:92%}
+#focusui.compare.narrow #fhead dl{flex-direction:column;gap:2px;justify-content:flex-start}
+#focusui.compare.narrow #fhead dd{font-size:12px}
+#focusui.compare.narrow #fhead dt{display:inline;margin-right:6px}
+#focusui.compare.narrow #fhead dd{display:inline}
+/* 狭いとき: ラベルは積み木の下に、表としてまとめる */
+#focusui.compare.narrow .frow{grid-template-columns:4.4em 3.9em 7.4em 3.9em 4.4em;width:auto;font-size:10.5px;gap:0 3px;padding:1px 3px}
+#focusui.compare.narrow .frow b{font-size:12px}
+
+.viewbtns{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
+.viewbtns button,.viewbtns #reset{position:static;font-size:12px;padding:3px 10px}
+.viewbtns button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.viewbtns button[hidden]{display:none}
 .bandlegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5px;color:var(--ink)}
 .bandlegend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .bandlegend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
