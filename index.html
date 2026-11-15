@@ -4,8 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>業種別 給与レンジと就労人数</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="description" content="日本の14業種について、男女別の就労人数と給与レンジの構成を1枚で見るインタラクティブな可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="業種によって給与レンジはどのくらい異なるのか？">
+<meta property="og:description" content="日本の14業種について、男女別の就労人数と給与レンジの構成を1枚で見るインタラクティブな可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">
+<meta property="og:url" content="https://visualizing-jp.github.io/japan-salary-by-industry/">
+<meta property="og:image" content="https://visualizing-jp.github.io/japan-salary-by-industry/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -30,12 +39,14 @@
   <div class="chartwrap">
     <div class="legends">
       <div class="lg lg-flow"><h3>業種ごとの就労人数</h3><p>勤めている人数・男女別（線の太さ）</p><svg id="lgflow" viewBox="0 0 120 74" aria-hidden="true"></svg></div>
+      <div class="lg lg-disc"><h3>円盤の面積</h3><p>その業種の中で、そのレンジにいる人の割合</p><svg id="lgdisc" viewBox="0 0 150 44" aria-hidden="true"></svg></div>
       <div class="lg lg-band"><h3>業種ごとの給与レンジ</h3><p>そのレンジで給与をもらっている人数（業種内での割合）</p><div id="lgband" role="group" aria-label="給与レンジ"></div></div>
     </div>
     <div class="chart"><svg id="svg" viewBox="0 0 1200 810" role="img" aria-label="業種別の就労人数（男女別）と給与階級別の構成"></svg></div>
   </div>
   <footer>
-    <div class="fnote"><span>業種をクリック（タップ）すると、その業種だけを画面中央に拡大し、給与レンジごとの人数と割合を表示します。凡例でレンジを選ぶと、全業種でそのレンジの割合を比べられます。</span>
+    <div class="fnote"><span>業種をクリック（タップ）すると、その業種だけを画面中央に拡大し、給与レンジごとの人数と割合を表示します。凡例でレンジを選ぶと、全業種でそのレンジの割合を比べられます。表示中の年や業種はURLに反映されるので、そのままリンクで共有できます。</span>
+    <span>線の太さは人数に比例します。細すぎて太さで表せない線は点線にしています。元の統計表に数値がない層は「該当なし」と表示し、0人として扱っています。</span>
     <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（業種別・給与階級別、1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="https://www.e-stat.go.jp/dbview?sid=0004009620">e-Stat 統計表 0004009620</a> を <a href="https://github.com/dataofjapan/data-of-japan/tree/main/apps/society/work-category/public/data">data-of-japan/work-category</a> の配信データ経由で使用。</span></div>
     <div class="credit">制作：<a href="https://notation.co.jp/">矢崎裕一</a></div>
   </footer>
@@ -48,10 +59,12 @@
     </div>
     <dl id="zstats"></dl>
     <svg id="zsvg" role="img" aria-label="選んだ業種の給与レンジ別の人数と割合"></svg>
+    <p id="zlegend"></p>
+    <div id="ztop"></div>
     <div class="zctl">
       <button id="zprev" type="button">‹ 前の業種</button>
       <div class="seg" id="zsex" role="group" aria-label="円盤の対象">
-        <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
+        <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button><button type="button" data-s="compare">男女を並べる</button>
       </div>
       <div class="zyear"><button id="zym" type="button" aria-label="前の年">‹</button><b id="zyl"></b><button id="zyp" type="button" aria-label="次の年">›</button></div>
       <button id="znext" type="button">次の業種 ›</button>

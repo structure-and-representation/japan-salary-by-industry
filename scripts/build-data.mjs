@@ -18,6 +18,11 @@ const BAND_LABELS = [
   '100万円以下', '100万円超 200万円以下', '200万円超 300万円以下', '300万円超 400万円以下',
   '400万円超 500万円以下', '500万円超 600万円以下', '600万円超 700万円以下', '700万円超 800万円以下', '800万円超',
 ];
+// 「800万円超」にまとめた6階級。内訳として別に持つ
+const TOP_BAND_LABELS = [
+  '800万円超 900万円以下', '900万円超 1,000万円以下', '1,000万円超 1,500万円以下',
+  '1,500万円超 2,000万円以下', '2,000万円超 2,500万円以下', '2,500万円超',
+];
 
 /** 行優先のフラット配列（cube）から値を読む関数を作る */
 function cubeReader(cube, measure) {
@@ -54,7 +59,7 @@ async function main() {
 
   const years = dim(dist, 'year');
   const brackets = dim(dist, 'bracket');
-  if (brackets.length < KEPT_BRACKETS + 1) throw new Error('給与階級の数が想定より少ない');
+  if (brackets.length !== KEPT_BRACKETS + TOP_BAND_LABELS.length) throw new Error('給与階級の数が想定（14）と違う');
   for (const [a, b] of [['year', 'year'], ['industry', 'industry'], ['sex', 'sex']]) {
     if (dim(dist, a).join() !== dim(industry, b).join()) throw new Error(`dist.json と industry.json で軸 ${a} が一致しない`);
   }
@@ -66,22 +71,22 @@ async function main() {
 
   const record = (code) => {
     const perSexYear = (fn) => SEXES.map((sex) => years.map((year) => fn(sex, year)));
+    const rawBrackets = (sex, year) => brackets.map((b) => bandWorkers(code, b, sex, year));
     return {
       workers: perSexYear((sex, year) => workers(code, sex, year)),
       // 千円単位（元データのまま）
       salaryAvg: perSexYear((sex, year) => salaryAvg(code, sex, year)),
       bands: perSexYear((sex, year) => {
-        const raw = brackets.map((b) => {
-          const v = bandWorkers(code, b, sex, year);
-          if (v === null) missingCells += 1;
-          return v;
-        });
+        const raw = rawBrackets(sex, year);
+        missingCells += raw.filter((v) => v === null).length;
         const kept = raw.slice(0, KEPT_BRACKETS);
         const rest = raw.slice(KEPT_BRACKETS);
         // まとめる階級がすべて欠損なら欠損のまま、ひとつでも値があれば欠損を0として合算する
         const merged = rest.every((v) => v === null) ? null : rest.reduce((sum, v) => sum + (v ?? 0), 0);
         return [...kept, merged];
       }),
+      // 「800万円超」の内訳（6階級）。数値のないセルは null のまま
+      topBandDetail: perSexYear((sex, year) => rawBrackets(sex, year).slice(KEPT_BRACKETS)),
     };
   };
 
@@ -102,6 +107,7 @@ async function main() {
     years: years.map(Number),
     sexes: SEXES,
     bandLabels: BAND_LABELS,
+    topBandLabels: TOP_BAND_LABELS,
     industries,
     total: record(TOTAL_CODE),
   };

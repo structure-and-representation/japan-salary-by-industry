@@ -3,6 +3,8 @@
 export const BAND_COUNT = 9;
 export const SEX = { TOTAL: 0, MALE: 1, FEMALE: 2 };
 export const SEX_LABELS = ['男女計', '男性', '女性'];
+/** URL に書くときの名前 */
+export const SEX_KEYS = ['total', 'male', 'female'];
 
 /** 並び順の選択肢。値は select の value と対応する */
 export const SORT = { NTA: 'nta', SALARY: 'salary', WORKERS: 'workers', LOW_SHARE: 'lowShare' };
@@ -11,6 +13,9 @@ export const LOW_SHARE_BANDS = 3;
 
 /** 切り替え時の動きの長さ（ミリ秒） */
 export const DURATION = { full: 650, quick: 250, closeup: 300, closeupMax: 450, open: 380 };
+
+/** 円盤の面積の凡例に出す割合 */
+export const DISC_LEGEND_SHARES = [0.1, 0.3, 0.5];
 
 export const DISC = {
   /** 楕円の縦横比。斜め上から見た円に見せる */
@@ -24,9 +29,12 @@ export const DISC = {
 export const FLOW = {
   /** 1人あたりの線の太さ（px）。500万人で13px */
   pxPerWorker: 2.6e-6,
-  /** これより細い線はこの太さで描く */
+  /** 太さがこれ（px）に満たない線は、太さでは表さず点線で描く */
   minWidth: 0.5,
-  legendValues: [1e5, 5e5, 1e6, 5e6],
+  /** 点線で描くときの線の太さ（px）と点の間隔 */
+  thinStroke: 0.8,
+  thinDash: '1.5 3',
+  legendValues: [5e5, 1e6, 5e6],
 };
 
 /**

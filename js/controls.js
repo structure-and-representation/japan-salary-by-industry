@@ -1,6 +1,8 @@
 // 操作部と凡例: 年の選択と再生、円盤の対象、並び順、配色、凡例、説明文。
-import { BAND_COUNT, DURATION, FLOW } from './config.js';
+import { BAND_COUNT, DURATION, FLOW, DISC, DISC_LEGEND_SHARES } from './config.js';
 import { SCHEMES, bandColor, bandSideColor } from './colors.js';
+import { radiusScale } from './discs.js';
+import { formatPercent } from './format.js';
 
 const d3 = window.d3;
 const PLAY_INTERVAL = 1300;
@@ -45,6 +47,7 @@ export function createControls({ data, store }) {
   document.querySelectorAll('#sex button').forEach((b) => { b.onclick = () => store.set({ sex: +b.dataset.s }); });
   $('sort').onchange = (e) => store.set({ sort: e.target.value });
   $('scheme').value = state.scheme;
+  $('sort').value = state.sort;
   $('scheme').onchange = (e) => store.set({ scheme: e.target.value }, { duration: 0 });
 
   // ---- 給与レンジの凡例（選ぶと全業種でそのレンジを比べる）。上が高い給与
@@ -77,23 +80,46 @@ export function createControls({ data, store }) {
       swatch.style.background = bandColor(state.scheme, +el.dataset.b);
       swatch.style.borderColor = bandSideColor(state.scheme, +el.dataset.b);
     });
+    $('scheme').value = state.scheme;
     $('hiname').textContent = SCHEMES[state.scheme].high;
     $('loname').textContent = SCHEMES[state.scheme].low;
   }
   function updateBand() {
     bandLegend.querySelectorAll('.lgb').forEach((el) => el.setAttribute('aria-pressed', +el.dataset.b === state.band));
   }
-  /** 線の太さの凡例。太さの尺度は配置で変わる */
-  function updateFlowLegend(flowWidth) {
-    const legend = d3.select('#lgflow');
-    legend.selectAll('*').remove();
+  /** 線の太さの凡例と、円盤の面積の凡例。どちらも尺度は配置で変わる */
+  function updateScaleLegends(layout) {
+    const flowLegend = d3.select('#lgflow');
+    flowLegend.selectAll('*').remove();
+    const row = (i) => 9 + i * 18;
+    const sample = (i) => flowLegend.append('line').attr('x1', 0).attr('x2', 56).attr('y1', row(i)).attr('y2', row(i)).style('stroke', 'var(--flow-hi)');
+    const label = (i, text) => flowLegend.append('text').attr('x', 66).attr('y', row(i) + 3.5).text(text);
+    // 太さでは表せない人数は点線
+    sample(0).attr('stroke-width', FLOW.thinStroke).attr('stroke-dasharray', FLOW.thinDash);
+    label(0, `${Math.floor(layout.thinFlowLimit / 1e4)}万人未満`);
     FLOW.legendValues.forEach((workers, i) => {
-      const y = 9 + i * 18;
-      legend.append('line').attr('x1', 0).attr('x2', 56).attr('y1', y).attr('y2', y)
-        .style('stroke', 'var(--flow-hi)').attr('stroke-width', flowWidth(workers));
-      legend.append('text').attr('x', 66).attr('y', y + 3.5).text(`${workers / 1e4}万人`);
+      sample(i + 1).attr('stroke-width', layout.flowWidth(workers) * layout.scale);
+      label(i + 1, `${workers / 1e4}万人`);
+    });
+
+    // 円盤の面積: 底をそろえて重ねた楕円と、その割合
+    const discLegend = d3.select('#lgdisc');
+    discLegend.selectAll('*').remove();
+    const radius = radiusScale(layout.disc.maxRadius * layout.scale);
+    const cx = 48;
+    const bottom = 40;
+    const labelX = 106;
+    DISC_LEGEND_SHARES.slice().reverse().forEach((share, i) => {
+      const rx = radius(share);
+      const ry = rx * DISC.tilt;
+      const labelY = 12 + i * 13;
+      discLegend.append('ellipse').attr('cx', cx).attr('cy', bottom - ry).attr('rx', rx).attr('ry', ry)
+        .style('fill', 'none').style('stroke', 'var(--flow-hi)').attr('stroke-width', 1);
+      discLegend.append('polyline').attr('points', `${cx},${bottom - 2 * ry} ${labelX - 14},${labelY - 3.5} ${labelX - 4},${labelY - 3.5}`)
+        .style('fill', 'none').style('stroke', 'var(--ink-faint)').attr('stroke-width', 0.75);
+      discLegend.append('text').attr('x', labelX).attr('y', labelY).text(`${Math.round(share * 100)}%`);
     });
   }
 
-  return { updateYear, updateSex, updateScheme, updateBand, updateFlowLegend, stopPlay };
+  return { updateYear, updateSex, updateScheme, updateBand, updateScaleLegends, stopPlay };
 }

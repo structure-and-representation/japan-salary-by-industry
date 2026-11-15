@@ -1,5 +1,5 @@
 // 一覧: 上下の流れ（就労人数）と、業種ごとの円盤の積み重ね（給与レンジ）。
-import { SEX } from './config.js';
+import { SEX, FLOW } from './config.js';
 import { bandShares, displayPositions } from './data.js';
 import { formatPercent, formatWorkers } from './format.js';
 import { computeLayout } from './layout.js';
@@ -129,13 +129,20 @@ export function createOverview({ svg, chartEl, wrapEl, data, store, onOpen }) {
         female: (d) => verticalFlowPath(trunk.female[d.index], rowY(d), -1),
       };
     }
+    // 細すぎて太さでは表せない線は、点線にして「太さを読む線ではない」ことを示す
+    const sexOf = { male: SEX.MALE, female: SEX.FEMALE };
     for (const key of ['male', 'female']) {
-      flows[key].transition(transition).attr('stroke-width', (d) => widths[key][d.index]).attr('d', paths[key]);
+      const isThin = (d) => d.workers[sexOf[key]][y] < layout.thinFlowLimit;
+      flows[key]
+        .classed('thin', isThin)
+        .attr('stroke-dasharray', (d) => (isThin(d) ? FLOW.thinDash : null))
+        .transition(transition)
+        .attr('stroke-width', (d) => (isThin(d) ? FLOW.thinStroke : widths[key][d.index]))
+        .attr('d', paths[key]);
     }
     columns.transition(transition)
       .attr('transform', (d) => `translate(${layout.columnX(position[d.index])},${layout.columnY(position[d.index])})`);
 
-    const sexOf = { male: SEX.MALE, female: SEX.FEMALE };
     const prefix = { male: '男性 ', female: '女性 ' };
     for (const key of ['male', 'female']) {
       const label = layout.countLabel[key];

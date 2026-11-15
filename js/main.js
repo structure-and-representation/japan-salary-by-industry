@@ -6,22 +6,28 @@ import { createStore } from './state.js';
 import { createOverview } from './overview.js';
 import { createCloseup } from './closeup.js';
 import { createControls } from './controls.js';
+import { readUrlState, writeUrlState } from './url.js';
 
 const d3 = window.d3;
+const $ = (id) => document.getElementById(id);
 
 async function start() {
   const data = await loadData();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const chartEl = document.querySelector('.chart');
 
-  const store = createStore({
+  // 既定の状態に、URL で指定された項目を重ねる（配色は URL、前回の選択、既定の順）
+  const defaults = {
     yearIndex: data.years.length - 1,
     sex: 0,
     sort: SORT.NTA,
     scheme: storedScheme(),
     band: null, // 凡例で選んだ給与レンジ
+    compare: false, // 拡大表示で男女を並べるか
     hover: null, // カーソルを合わせている業種の添字
-  });
+  };
+  const { industryIndex: initialIndustry, ...fromUrl } = readUrlState(data);
+  const store = createStore({ ...defaults, ...fromUrl });
   const { state } = store;
 
   let closeup = null;
@@ -33,7 +39,8 @@ async function start() {
     store,
     onOpen: (index, source, byKeyboard) => closeup.open(index, source, byKeyboard),
   });
-  closeup = createCloseup({ data, store, reducedMotion, elementOf: overview.elementOf });
+  const syncUrl = () => writeUrlState(data, state, closeup.openIndex);
+  closeup = createCloseup({ data, store, reducedMotion, elementOf: overview.elementOf, onChange: syncUrl });
   const controls = createControls({ data, store });
 
   // ---- 状態の変化 → 必要な描画だけを更新する
@@ -49,15 +56,17 @@ async function start() {
     if (has('band', 'yearIndex', 'sex')) overview.updateBandFocus();
     if (has('band')) controls.updateBand();
     if (has('hover')) overview.updateHover();
+    if (has('sort')) $('sort').value = state.sort;
     if (has('yearIndex')) controls.updateYear();
     if (has('sex')) controls.updateSex();
-    if (has('yearIndex', 'sex', 'scheme')) closeup.render(ms);
+    if (has('yearIndex', 'sex', 'scheme', 'compare')) closeup.render(ms);
+    if (!has('hover') || changed.size > 1) syncUrl();
   });
 
   // ---- 表示幅が変わったら配置からやり直す
   function relayout() {
     overview.applyLayout();
-    controls.updateFlowLegend(overview.layout.flowWidth);
+    controls.updateScaleLegends(overview.layout);
     overview.updateGeometry(0);
     overview.updateDiscs(0);
   }
@@ -75,6 +84,17 @@ async function start() {
   controls.updateSex();
   controls.updateScheme();
   controls.updateBand();
+
+  if (initialIndustry !== undefined) closeup.open(initialIndustry, overview.elementOf(initialIndustry), false);
+
+  // URL を手で書き換えたとき（戻る・進むを含む）は、その内容に合わせる
+  addEventListener('hashchange', () => {
+    const { industryIndex, ...next } = readUrlState(data);
+    const { hover, ...resettable } = defaults;
+    store.set({ ...resettable, scheme: state.scheme, ...next }, { duration: 0 });
+    if (industryIndex === undefined) closeup.close();
+    else if (industryIndex !== closeup.openIndex) closeup.open(industryIndex, overview.elementOf(industryIndex), false);
+  });
 
   let lastWidth = Math.floor(chartEl.clientWidth);
   new ResizeObserver(() => {

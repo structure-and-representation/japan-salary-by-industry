@@ -25,7 +25,7 @@ export function verify(data) {
   if (data.industries.some((d, i) => i > 0 && Number(d.code) <= Number(data.industries[i - 1].code))) problems.push('業種がコード順でない');
 
   const check = (label, rec) => {
-    for (const key of ['workers', 'salaryAvg', 'bands']) {
+    for (const key of ['workers', 'salaryAvg', 'bands', 'topBandDetail']) {
       if (rec[key].length !== SEX_COUNT || rec[key].some((a) => a.length !== nYears)) problems.push(`${label}: ${key} の形が 性別×年 でない`);
     }
     rec.bands.forEach((bySex, s) => bySex.forEach((bands, y) => {
@@ -36,6 +36,10 @@ export function verify(data) {
       const total = rec.workers[s][y];
       if (total === null) { problems.push(`${where}: 就労人数が欠損`); return; }
       if (Math.abs(sum - total) > SUM_TOLERANCE) problems.push(`${where}: 階級別の合計 ${sum} が就労人数 ${total} と一致しない`);
+      const detail = rec.topBandDetail[s][y];
+      if (detail.length !== data.topBandLabels.length) problems.push(`${where}: 800万円超の内訳が ${data.topBandLabels.length} 個でない`);
+      const detailSum = detail.reduce((a, v) => a + (v ?? 0), 0);
+      if (detailSum !== (bands[BAND_COUNT - 1] ?? 0)) problems.push(`${where}: 800万円超の内訳の合計 ${detailSum} が 800万円超 ${bands[BAND_COUNT - 1]} と一致しない`);
       const maxShare = Math.max(...bands.map((v) => (v ?? 0) / sum));
       if (maxShare > MAX_SHARE) problems.push(`${where}: 割合 ${(maxShare * 100).toFixed(1)}% が円盤スケールの上限 ${MAX_SHARE * 100}% を超える`);
     }));

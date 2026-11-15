@@ -15,11 +15,10 @@ const NARROW_LABEL_SPACING = 80;
 const VERTICAL_TRUNK_RATIO = 0.125;
 const VERTICAL_TRUNK_WORKERS = 29.3e6;
 
-/** 人数 → 線の太さ（px）。太さは人数に比例し、細すぎる線は下限の太さにする */
-function flowWidthScale(pxPerWorker) {
-  const linear = d3.scaleLinear().domain([0, 1e6]).range([0, 1e6 * pxPerWorker]);
-  return (workers) => Math.max(FLOW.minWidth, linear(workers));
-}
+/** 人数 → 線の太さ（px）。太さは人数に比例する */
+const flowWidthScale = (pxPerWorker) => d3.scaleLinear().domain([0, 1e6]).range([0, 1e6 * pxPerWorker]);
+/** 太さでは表せず、点線で描くことになる人数の上限 */
+const thinFlowLimit = (pxPerWorker) => FLOW.minWidth / pxPerWorker;
 
 function horizontalLayout(containerWidth, count) {
   const width = Math.max(HORIZONTAL_MIN_VIEWBOX, containerWidth);
@@ -30,10 +29,13 @@ function horizontalLayout(containerWidth, count) {
   const nameTop = 458; // 業種名の1行目
   return {
     mode: 'horizontal',
+    // 表示幅が座標系より狭いと図全体が縮む。図の外に置く凡例を同じ比率にするための倍率
+    scale: containerWidth / width,
     width,
     height: 810,
     overlayLegends: containerWidth >= OVERLAY_LEGEND_MIN_WIDTH,
     flowWidth: flowWidthScale(FLOW.pxPerWorker),
+    thinFlowLimit: thinFlowLimit(FLOW.pxPerWorker),
     columnX,
     columnY: () => 0,
     disc: { maxRadius: 46, layerHeight: 7.7, baseY: stackBase },
@@ -58,12 +60,15 @@ function verticalLayout(containerWidth, count) {
   const rowHeight = 124;
   const topMargin = 40;
   const rowCenterOffset = 68; // 行の上端から、円盤の基準位置まで
+  const pxPerWorker = Math.min(FLOW.pxPerWorker, (width * VERTICAL_TRUNK_RATIO) / VERTICAL_TRUNK_WORKERS);
   return {
     mode: 'vertical',
+    scale: 1,
     width,
     height: topMargin + count * rowHeight + 10,
     overlayLegends: false,
-    flowWidth: flowWidthScale(Math.min(FLOW.pxPerWorker, (width * VERTICAL_TRUNK_RATIO) / VERTICAL_TRUNK_WORKERS)),
+    flowWidth: flowWidthScale(pxPerWorker),
+    thinFlowLimit: thinFlowLimit(pxPerWorker),
     columnX: () => width / 2,
     columnY: d3.scalePoint().domain(d3.range(count)).range([topMargin + rowCenterOffset, topMargin + rowCenterOffset + (count - 1) * rowHeight]),
     disc: { maxRadius: 41, layerHeight: 6, baseY: 36 },

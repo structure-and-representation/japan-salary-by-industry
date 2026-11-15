@@ -3,7 +3,7 @@
   --bg:#ffffff; --ink:#4a4a4f; --ink-soft:#8b8b92; --ink-faint:#b9b9bf;
   --flow:#cfcfd2; --flow-hi:#77777d; --line:#e4e4e8; --panel:#ffffff; --accent:#542788;
   --neutral-disc:#f1f1f3;
-  --font: "Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --font: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic",Meiryo,"Noto Sans JP","Noto Sans CJK JP",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
@@ -59,7 +59,8 @@ button:hover,select:hover{border-color:var(--ink-soft)}
 .lg h3{font-size:13px;margin:0;font-weight:700;line-height:1.4}
 .lg p{font-size:10.5px;color:var(--ink-soft);margin:0 0 5px;line-height:1.35}
 #lgflow{display:block;width:120px;height:74px}
-#lgflow text{font-size:10px;fill:var(--ink-soft)}
+#lgflow text,#lgdisc text{font-size:10px;fill:var(--ink-soft)}
+#lgdisc{display:block;width:150px;height:44px}
 #lgband{display:flex;flex-wrap:wrap;gap:3px 4px;max-width:520px}
 .lgb{border:0;background:none;padding:2px 7px 2px 3px;font-size:10.5px;display:inline-flex;align-items:center;gap:6px;border-radius:4px;line-height:1.3;white-space:nowrap}
 .lgb i{width:22px;height:10px;display:inline-block;border:1px solid transparent;flex:none}
@@ -68,6 +69,7 @@ button:hover,select:hover{border-color:var(--ink-soft)}
 .wide .legends{display:contents}
 .wide .lg{position:absolute;right:0;width:186px;z-index:1}
 .wide .lg-flow{top:6px}
+.wide .lg-disc{top:6px;left:0;right:auto}
 .wide .lg-band{bottom:4px}
 .wide #lgband{flex-direction:column;flex-wrap:nowrap;gap:0;align-items:flex-start}
 .wide .lgb{padding:0 7px 0 3px;font-size:10px;line-height:1.3}
@@ -91,6 +93,7 @@ svg{display:block;width:100%;height:auto;font-family:var(--font)}
 .sexlabel{font-size:30px;fill:var(--ink-faint);letter-spacing:.08em}
 #zoom{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:12px;background:color-mix(in srgb,var(--bg) 88%,transparent);overflow:auto}
 #zoom[hidden]{display:none}
+#zcard > *{flex-shrink:0}
 #zcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.18);padding:18px 20px 14px;width:min(800px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px;transform-origin:0 0}
 .zhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 #zname{font-size:20px;margin:0;font-weight:700;line-height:1.35}
@@ -106,6 +109,14 @@ svg{display:block;width:100%;height:auto;font-family:var(--font)}
 #zsvg .zl{font-weight:500}
 #zsvg .zp{font-weight:700}
 #zsvg .zhd{font-size:11px;fill:var(--ink-soft)}
+#zlegend{margin:0;font-size:11px;color:var(--ink-soft)}
+#ztop h3{font-size:12px;margin:0 0 4px;font-weight:700}
+#ztop dl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;margin:0;font-variant-numeric:tabular-nums}
+#ztop dl div{display:flex;flex-direction:column}
+#ztop dt{font-size:10.5px;color:var(--ink-soft)}
+#ztop dd{margin:0;font-size:12.5px}
+#ztop dd span{display:inline-block;font-size:10.5px;color:var(--ink-soft);margin-right:6px}
+@media (max-width:600px){#ztop dl{grid-template-columns:repeat(2,1fr)}}
 .zlead{stroke:var(--ink-faint);stroke-width:1}
 .zctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;font-size:12.5px}
 .zyear{display:flex;align-items:center;gap:6px}
