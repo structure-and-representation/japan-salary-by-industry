@@ -227,13 +227,13 @@ function layout(){
   const cw=Math.max(300,Math.floor(chartEl.clientWidth));
   if(cw>=820){
     const W=Math.max(1000,cw);
-    L={mode:'h',W,Ht:810,PX:2.6e-6,rmax:54,H:9,base:430,
+    L={mode:'h',W,Ht:810,PX:2.6e-6,rmax:46,H:7.7,base:424,
       x:p=>60+p*(W-120)/(N-1),y:()=>0,
       lines:d=>((W-120)/(N-1)<80?NARROW[d.i]:d.name).split('|'),nameY:(i,n)=>458+i*14,
       pct:{x:0,y:314,a:'middle'},hit:{x:-41,w:82,y:300,h:215}};
   }else{
     const W=cw,rowH=124;
-    L={mode:'v',W,Ht:40+N*rowH+10,PX:Math.min(2.6e-6,W*0.125/29.3e6),rmax:48,H:7,base:40,rowH,
+    L={mode:'v',W,Ht:40+N*rowH+10,PX:Math.min(2.6e-6,W*0.125/29.3e6),rmax:41,H:6,base:36,rowH,
       x:()=>W/2,y:p=>40+68+p*rowH,
       lines:d=>{const a=d.name.split('|');return a.length===3?[a[0]+a[1],a[2]]:[a.join('')]},
       nameY:(i,n)=>-44-(n-1-i)*13,
