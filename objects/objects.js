@@ -33,8 +33,6 @@ const NARROW_VIEW = 620; // 表示領域の幅がこれより狭いとき、詰�
 const LABEL_GAP = 30; // 積み木の端から、層のラベルまでの距離（px）
 const COMPARE_AZIMUTH_RANGE = 1.0; // 男女を並べたとき、左右に回せる角度（ラジアン）。左右が入れ替わらない範囲にする
 const TIGHT_CELL_PX = 112; // 積み木の間隔がこれ（px）より狭いとき、業種名の幅を詰める
-/** 配色の基準にしている層（400万円超 500万円以下）。全体の平均給与がここに入る */
-const BASELINE_BAND = 4;
 const LABEL_MARGIN = 6;
 const LABEL_OFFSETS = [5, 11, 17, 23, 29, 35]; // 業種名を積み木からどれだけ離して置くか（px）。近い順に試す // 業種名と、ほかの積み木との間に空ける余白（px）
 /** 幅が狭いときの給与レンジ名 */
@@ -196,6 +194,8 @@ async function start() {
     camera.updateMatrixWorld();
     home = { position: target.clone().addScaledVector(direction, distance), target };
   }
+  /** 全体の視点へ戻る */
+  const goHome = () => { releasePair(); flyTo(home.position.clone(), home.target.clone()); };
   /** 全部の積み木を格子の位置へ戻し、回せる範囲の制限を外す */
   function releasePair() {
     goals.forEach((goal, i) => goal.copy(homes[i]));
@@ -662,9 +662,8 @@ async function start() {
   /** 配色やテーマ（明暗）が変わったとき、色に関わるものをすべて塗り直す */
   function recolor() {
     stacks.forEach((stack) => stack.setColors(state.scheme));
-    // 色の凡例は縦に、上が高い給与。色見本をすき間なく積み、基準の層を境に2方向へ分かれる配色だと分かるようにする
     $('bandlegend').innerHTML = Array.from({ length: BAND_COUNT }, (unused, i) => BAND_COUNT - 1 - i)
-      .map((band) => `<li${band === BASELINE_BAND ? ' class="base"' : ''}><i style="background:${bandColor(state.scheme, band)}"></i><span>${data.bandLabels[band]}</span>${band === BASELINE_BAND ? '<em>基準</em>' : ''}</li>`).join('');
+      .map((band) => `<span><i style="background:${bandColor(state.scheme, band)}"></i>${data.bandLabels[band]}</span>`).join('');
     update({});
     dirty = true;
   }

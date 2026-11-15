@@ -15,31 +15,31 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=53b26f33">
-<link rel="stylesheet" href="object/object.css?v=53b26f33">
-<link rel="stylesheet" href="objects/objects.css?v=53b26f33">
-<meta name="build" content="53b26f33">
+<link rel="stylesheet" href="css/style.css?v=7240179b">
+<link rel="stylesheet" href="object/object.css?v=7240179b">
+<link rel="stylesheet" href="objects/objects.css?v=7240179b">
+<meta name="build" content="7240179b">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "./vendor/three/three.module.min.js?v=53b26f33",
-  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=53b26f33",
-  "./js/closeup.js": "./js/closeup.js?v=53b26f33",
-  "./js/colors.js": "./js/colors.js?v=53b26f33",
-  "./js/config.js": "./js/config.js?v=53b26f33",
-  "./js/controls.js": "./js/controls.js?v=53b26f33",
-  "./js/data.js": "./js/data.js?v=53b26f33",
-  "./js/discs.js": "./js/discs.js?v=53b26f33",
-  "./js/format.js": "./js/format.js?v=53b26f33",
-  "./js/layout.js": "./js/layout.js?v=53b26f33",
-  "./js/main.js": "./js/main.js?v=53b26f33",
-  "./js/overview.js": "./js/overview.js?v=53b26f33",
-  "./js/state.js": "./js/state.js?v=53b26f33",
-  "./js/url.js": "./js/url.js?v=53b26f33",
-  "./object/object.js": "./object/object.js?v=53b26f33",
-  "./object/toy.js": "./object/toy.js?v=53b26f33",
-  "./objects/objects.js": "./objects/objects.js?v=53b26f33"
+  "three": "./vendor/three/three.module.min.js?v=7240179b",
+  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=7240179b",
+  "./js/closeup.js": "./js/closeup.js?v=7240179b",
+  "./js/colors.js": "./js/colors.js?v=7240179b",
+  "./js/config.js": "./js/config.js?v=7240179b",
+  "./js/controls.js": "./js/controls.js?v=7240179b",
+  "./js/data.js": "./js/data.js?v=7240179b",
+  "./js/discs.js": "./js/discs.js?v=7240179b",
+  "./js/format.js": "./js/format.js?v=7240179b",
+  "./js/layout.js": "./js/layout.js?v=7240179b",
+  "./js/main.js": "./js/main.js?v=7240179b",
+  "./js/overview.js": "./js/overview.js?v=7240179b",
+  "./js/state.js": "./js/state.js?v=7240179b",
+  "./js/url.js": "./js/url.js?v=7240179b",
+  "./object/object.js": "./object/object.js?v=7240179b",
+  "./object/toy.js": "./object/toy.js?v=7240179b",
+  "./objects/objects.js": "./objects/objects.js?v=7240179b"
  }
 }
 </script>
@@ -65,19 +65,12 @@
     <div class="ctl"><label for="scheme">配色</label>
       <select id="scheme"><option value="PuOr">オレンジ〜紫</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
   </div>
-  <div class="stagewrap">
   <div class="view wideview" id="view"><canvas id="canvas" aria-label="14業種の給与レンジの円盤を積み重ねた立体"></canvas>
     <div id="labels" aria-hidden="true"></div>
     <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div>
       <div class="fsex" id="fmale">男性</div><div class="fsex" id="ffemale">女性</div></div>
     <div class="viewbtns"><button id="reset" type="button" hidden>全体に戻る</button></div></div>
-  <aside class="colorlegend" aria-label="給与レンジの色">
-    <h3>給与レンジ</h3>
-    <p>高い</p>
-    <ol id="bandlegend"></ol>
-    <p>低い</p>
-  </aside>
-  </div>
+  <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
   <footer>
     <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
     <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="object/">1業種ずつ見る</a></span></div>
@@ -85,6 +78,6 @@
   </footer>
 </main>
 <script src="vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="objects/objects.js?v=53b26f33"></script>
+<script type="module" src="objects/objects.js?v=7240179b"></script>
 </body>
 </html>
