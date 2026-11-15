@@ -1,15 +1,39 @@
 /* 14業種を並べる試作ページだけのスタイル */
-.wideview{flex:none;width:100%;height:min(62vh,600px);min-height:400px}
+.wideview{flex:none;width:100%;height:min(74vh,720px);min-height:440px}
+
+/* 全体表示の業種名。位置は objects.js が積み木に合わせて決める */
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.lab{position:absolute;left:0;top:0;font-size:11px;font-weight:700;line-height:1.25;color:var(--ink);text-align:center;width:8.4em;margin-left:-4.2em;text-wrap:balance;transition:opacity .2s}
-/* 幅が狭いときは業種名だけにして、後ろの行の積み木と重ならないようにする */
-@media (max-width:600px){.lab{font-size:9.5px}.lab small{display:none}.wideview{height:80vh;min-height:540px}}
+.lab{position:absolute;left:0;top:0;font-size:11px;font-weight:700;line-height:1.25;color:var(--ink);text-align:center;width:8.4em;text-wrap:balance;transition:opacity .2s}
 .lab small{display:block;font-weight:500;color:var(--ink-soft);font-size:10px}
-.lab.dim{opacity:.35}
+/* 幅が狭いときは業種名だけにする */
+@media (max-width:600px){.lab{font-size:9.5px;width:7em}.lab small{display:none}.wideview{height:84vh;min-height:560px}}
+
+/* 業種に寄ったときの表示。左に概要、右に各層のラベル */
+#focusui{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .35s}
+#focusui.on{opacity:1}
+#leads{position:absolute;inset:0;width:100%;height:100%}
+#leads line{stroke:var(--ink-faint);stroke-width:1}
+#fhead{position:absolute;left:0;top:0;text-align:right;max-width:240px}
+#fhead h2{font-size:20px;margin:0;font-weight:700;line-height:1.3;text-wrap:balance}
+#fhead p{margin:2px 0 10px;font-size:12px;color:var(--ink-soft)}
+#fhead dl{margin:0;display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+#fhead dt{font-size:11px;color:var(--ink-soft)}
+#fhead dd{margin:0;font-size:19px;font-weight:700;line-height:1.25}
+.frow{position:absolute;left:0;top:0;display:grid;grid-template-columns:auto 11.6em 4.2em 4.6em;align-items:center;gap:0 6px;font-size:12.5px;line-height:1.35;white-space:nowrap;font-variant-numeric:tabular-nums;padding:1px 6px 1px 4px;border-radius:4px;color:var(--ink)}
+#focusui.on .frow{pointer-events:auto}
+.frow i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
+.frow b{text-align:right;font-size:14px}
+.frow .n{text-align:right}
+.frow.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+/* 幅が狭いとき: 概要は左上に左寄せ、ラベルは短く */
+#focusui.narrow #fhead{text-align:left;max-width:60%}
+#focusui.narrow #fhead h2{font-size:16px}
+#focusui.narrow #fhead dl{flex-direction:row;gap:14px}
+#focusui.narrow #fhead dd{font-size:15px}
+#focusui.narrow .frow{grid-template-columns:auto 5.6em 3.6em 4.3em;font-size:10.5px;gap:0 3px;padding:0 3px}
+#focusui.narrow .frow b{font-size:11.5px}
+
 #reset[hidden]{display:none}
 .bandlegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5px;color:var(--ink)}
 .bandlegend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .bandlegend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
-.detail{flex:none;max-width:560px}
-.detail[hidden]{display:none}
-.detailhead{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:flex-end}

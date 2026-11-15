@@ -17,7 +17,7 @@
 <main>
   <header>
     <h1>14業種の給与レンジを、積み木のように並べる<small class="proto">試作</small></h1>
-    <p class="lede">積み木1つが業種1つ、円盤1枚が給与レンジ1つです。下が低い給与、上が高い給与です。<span id="sizetext"></span>ドラッグで回し、ホイールやピンチで近づけます。積み木をクリック（タップ）すると、その業種に寄って内訳を表示します。</p>
+    <p class="lede">積み木1つが業種1つ、円盤1枚が給与レンジ1つです。下が低い給与、上が高い給与です。<span id="sizetext"></span>ドラッグで回し、ホイールやピンチで近づけます。積み木をクリック（タップ）すると、その業種だけが残り、左右に内訳が出ます。</p>
   </header>
   <div class="controls">
     <div class="ctl"><span>円盤の面積</span>
@@ -33,15 +33,9 @@
   </div>
   <div class="view wideview" id="view"><canvas id="canvas" aria-label="14業種の給与レンジの円盤を積み重ねた立体"></canvas>
     <div id="labels" aria-hidden="true"></div>
-    <button id="reset" type="button">全体に戻る</button></div>
+    <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div></div>
+    <button id="reset" type="button" hidden>全体に戻る</button></div>
   <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
-  <aside class="panel detail" id="detail" hidden>
-    <div class="detailhead">
-      <div><h2 id="name"></h2><p id="meta"></p></div>
-      <dl id="stats"></dl>
-    </div>
-    <table id="bands"><thead><tr><th>給与レンジ</th><th>割合</th><th>人数</th></tr></thead><tbody></tbody></table>
-  </aside>
   <footer>
     <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
     <span>データソース：国税庁「民間給与実態統計調査」全国計表 第9表（1年を通じて勤務した給与所得者、2014〜2024年分）。<a href="../">平面の一覧に戻る</a>　<a href="../object/">1業種だけの立体</a></span></div>

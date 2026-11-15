@@ -41,7 +41,7 @@ const pegMaterial = new THREE.MeshStandardMaterial({ color: 0xcaa574, roughness:
  */
 export function createStack(geometry, userData = {}) {
   const group = new THREE.Group();
-  const peg = new THREE.Mesh(pegGeometry, pegMaterial);
+  const peg = new THREE.Mesh(pegGeometry, pegMaterial.clone());
   peg.position.y = (STACK_HEIGHT + PEG_TOP) / 2;
   peg.castShadow = true;
   group.add(peg);
@@ -55,11 +55,32 @@ export function createStack(geometry, userData = {}) {
     return { mesh, radius: 0, targetRadius: 0, y: restY(band), velocity: 0, delay: 0 };
   });
 
+  // 透明度。ほかの業種に寄っている間は、目標を 0 にして消す
+  let opacity = 1;
+  let targetOpacity = 1;
+  const materials = [peg.material, ...discs.map((d) => d.mesh.material)];
+  function applyOpacity() {
+    const solid = opacity > 0.999;
+    materials.forEach((m) => { m.transparent = !solid; m.opacity = opacity; m.depthWrite = solid; });
+    // 消えかけの積み木は影を落とさない
+    peg.castShadow = opacity > 0.5;
+    discs.forEach((d) => { d.mesh.castShadow = opacity > 0.5; });
+    group.visible = opacity > 0.01;
+  }
+
   return {
     group,
     discs,
-    /** 形のある円盤（当たり判定に使う） */
-    get meshes() { return discs.filter((d) => d.radius > 0.001).map((d) => d.mesh); },
+    /** 形があり、見えている円盤（当たり判定に使う） */
+    get meshes() { return opacity > 0.5 ? discs.filter((d) => d.radius > 0.001).map((d) => d.mesh) : []; },
+    /** いちばん大きい円盤の半径（画面上の占める範囲を求めるのに使う） */
+    get maxRadius() { return Math.max(...discs.map((d) => d.targetRadius)); },
+    get visible() { return targetOpacity > 0.5; },
+    /** 見せる・消すを切り替える。instant なら動きなし */
+    setVisible(visible, instant = false) {
+      targetOpacity = visible ? 1 : 0;
+      if (instant) { opacity = targetOpacity; applyOpacity(); }
+    },
     setColors(scheme) {
       discs.forEach((disc, band) => disc.mesh.material.color.set(bandColor(scheme, band)));
     },
@@ -90,6 +111,12 @@ export function createStack(geometry, userData = {}) {
     /** dt 秒ぶん進める。まだ動いている円盤があれば true を返す */
     step(dt) {
       let moving = false;
+      if (opacity !== targetOpacity) {
+        opacity += (targetOpacity - opacity) * Math.min(1, dt * 8);
+        if (Math.abs(targetOpacity - opacity) < 0.005) opacity = targetOpacity;
+        applyOpacity();
+        moving = true;
+      }
       discs.forEach((disc, band) => {
         // 半径: 目標へなめらかに近づける
         disc.radius += (disc.targetRadius - disc.radius) * Math.min(1, dt * 9);
