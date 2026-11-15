@@ -33,6 +33,12 @@
 
 1業種の給与レンジを、積み木のような立体にした試作です（`object/`）。ドラッグで回せ、業種を替えると円盤が上から落ちて積み上がります。描画には同梱の Three.js（`vendor/three/`）を使い、データと配色は本体と共用しています。URL の `industry`・`year`・`sex` で表示内容を指定できます。
 
+## 試作: 14業種の立体を並べる
+
+[https://visualizing-jp.github.io/japan-salary-by-industry/objects/](https://visualizing-jp.github.io/japan-salary-by-industry/objects/)
+
+同じ積み木を14業種ぶん台の上に並べた試作です（`objects/`）。全体を回して見比べ、積み木をクリックするとその業種に寄って内訳を出します。円盤の面積は「業種内の割合」と「人数」を切り替えられ、人数にすると全業種で同じ尺度になります。URL の `size=count`・`year`・`sex`・`industry` で表示内容を指定できます。立体の部品（円盤の形、積み重ね、光）は `object/toy.js` にあり、2つの試作で共用しています。
+
 ## データ
 
 国税庁「民間給与実態統計調査」全国計表 第9表（業種別・給与階級別、1年を通じて勤務した給与所得者）。

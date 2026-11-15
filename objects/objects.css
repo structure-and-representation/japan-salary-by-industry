@@ -1,0 +1,15 @@
+/* 14業種を並べる試作ページだけのスタイル */
+.wideview{flex:none;width:100%;height:min(62vh,600px);min-height:400px}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lab{position:absolute;left:0;top:0;font-size:11px;font-weight:700;line-height:1.25;color:var(--ink);text-align:center;width:8.4em;margin-left:-4.2em;text-wrap:balance;transition:opacity .2s}
+/* 幅が狭いときは業種名だけにして、後ろの行の積み木と重ならないようにする */
+@media (max-width:600px){.lab{font-size:9.5px}.lab small{display:none}.wideview{height:80vh;min-height:540px}}
+.lab small{display:block;font-weight:500;color:var(--ink-soft);font-size:10px}
+.lab.dim{opacity:.35}
+#reset[hidden]{display:none}
+.bandlegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5px;color:var(--ink)}
+.bandlegend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.bandlegend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
+.detail{flex:none;max-width:560px}
+.detail[hidden]{display:none}
+.detailhead{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:flex-end}
