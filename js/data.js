@@ -2,7 +2,9 @@
 import { SORT, LOW_SHARE_BANDS, INDUSTRY_LABELS } from './config.js';
 
 export async function loadData(url = 'data/salary.json') {
-  const res = await fetch(url);
+  // HTML と同じ版のデータを読む（版の番号は scripts/stamp-version.mjs が HTML に書く）
+  const build = document.querySelector('meta[name="build"]')?.content;
+  const res = await fetch(build ? `${url}?v=${build}` : url);
   if (!res.ok) throw new Error(`データを読み込めない: ${url} (${res.status})`);
   const data = await res.json();
   data.industries.forEach((industry, index) => {

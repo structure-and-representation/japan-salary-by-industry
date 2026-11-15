@@ -150,5 +150,13 @@ async function start() {
 
 start().catch((error) => {
   console.error(error);
-  $('view').innerHTML = '<p class="lede" style="padding:20px">立体を表示できませんでした。WebGL に対応したブラウザで開いてください。</p>';
+  const probe = document.createElement('canvas');
+  const hasWebGL = !!(probe.getContext('webgl2') || probe.getContext('webgl'));
+  const message = document.createElement('p');
+  message.className = 'lede';
+  message.style.padding = '20px';
+  message.textContent = hasWebGL
+    ? `立体を表示できませんでした。ページを再読み込みしてください。（詳細: ${error && error.message ? error.message : error}）`
+    : '立体を表示できませんでした。このブラウザでは WebGL が使えないようです。';
+  $('view').replaceChildren(message);
 });

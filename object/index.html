@@ -6,11 +6,33 @@
 <title>業種別 給与レンジの立体（試作）</title>
 <meta name="description" content="業種ごとの給与レンジの構成を、回して眺められる積み木のような立体にした試作。">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/style.css">
-<link rel="stylesheet" href="object.css">
+<link rel="stylesheet" href="../css/style.css?v=cd9da74d">
+<link rel="stylesheet" href="object.css?v=cd9da74d">
+<meta name="build" content="cd9da74d">
+<!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
-{ "imports": { "three": "../vendor/three/three.module.min.js", "three/addons/": "../vendor/three/addons/" } }
+{
+ "imports": {
+  "three": "../vendor/three/three.module.min.js?v=cd9da74d",
+  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=cd9da74d",
+  "../js/closeup.js": "../js/closeup.js?v=cd9da74d",
+  "../js/colors.js": "../js/colors.js?v=cd9da74d",
+  "../js/config.js": "../js/config.js?v=cd9da74d",
+  "../js/controls.js": "../js/controls.js?v=cd9da74d",
+  "../js/data.js": "../js/data.js?v=cd9da74d",
+  "../js/discs.js": "../js/discs.js?v=cd9da74d",
+  "../js/format.js": "../js/format.js?v=cd9da74d",
+  "../js/layout.js": "../js/layout.js?v=cd9da74d",
+  "../js/main.js": "../js/main.js?v=cd9da74d",
+  "../js/overview.js": "../js/overview.js?v=cd9da74d",
+  "../js/state.js": "../js/state.js?v=cd9da74d",
+  "../js/url.js": "../js/url.js?v=cd9da74d",
+  "./object.js": "./object.js?v=cd9da74d",
+  "./toy.js": "./toy.js?v=cd9da74d"
+ }
+}
 </script>
+<!-- /build:importmap -->
 </head>
 <body>
 <main>
@@ -47,6 +69,6 @@
   </footer>
 </main>
 <script src="../vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="object.js"></script>
+<script type="module" src="object.js?v=cd9da74d"></script>
 </body>
 </html>

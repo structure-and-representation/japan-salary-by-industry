@@ -75,6 +75,17 @@
 npm run serve   # http://localhost:8000/
 ```
 
+## 公開前の手順
+
+ファイルを変更したら、push の前に次を実行します。
+
+```
+npm run stamp    # HTML から読み込むファイルに、内容から決まる版の番号（?v=...）を付け直す
+npm run verify   # データの検証と、版の番号が最新かどうかの確認
+```
+
+GitHub Pages は各ファイルを約10分キャッシュさせます。版の番号がないと、更新の直後に「新しい HTML と古いスクリプト」が組み合わさって動かなくなることがあります。番号は全ファイルの内容から計算し、スクリプトどうしの `import` にも HTML の importmap で同じ番号を付けるので、HTML と同じ版のファイルだけが読み込まれます。
+
 ## データの更新
 
 新しい年分が [data-of-japan](https://github.com/dataofjapan/data-of-japan) に入ったら、そのリポジトリを手元に取得して次を実行します。
