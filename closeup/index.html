@@ -147,7 +147,7 @@ footer a{color:inherit}
         <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
       </div></div>
     <div class="ctl"><label for="sort">並び順</label>
-      <select id="sort"><option value="orig">標準の並び</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
+      <select id="sort"><option value="orig">国税庁の統計表の順</option><option value="salary">平均給与が高い順</option><option value="workers">就労人数が多い順</option><option value="low">300万円以下の割合が高い順</option></select></div>
     <div class="ctl"><label for="scheme">配色</label>
       <select id="scheme"><option value="PuOr">オレンジ〜紫</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
   </div>
@@ -281,8 +281,10 @@ const lgband=document.getElementById('lgband');
 lgband.innerHTML=d3.range(9).reverse().map(b=>`<button type="button" class="lgb" data-b="${b}" aria-pressed="false"><i></i>${BANDS[b]}</button>`).join('');
 lgband.addEventListener('click',e=>{const t=e.target.closest('.lgb');if(!t)return;e.stopPropagation();const b=+t.dataset.b;st.band=st.band===b?null:b;render(250)});
 
+// 国税庁の統計表（第9表）の業種コード順。DATA.inds 内の添字で表す
+const NTA=[1,2,3,4,5,6,8,7,9,11,10,12,13,0];
 function order(){
-  const y=st.y,idx=d3.range(N);
+  const y=st.y,idx=NTA.slice();
   if(st.sort==='salary')idx.sort((a,b)=>inds[b].s[0][y]-inds[a].s[0][y]);
   if(st.sort==='workers')idx.sort((a,b)=>inds[b].w[0][y]-inds[a].w[0][y]);
   if(st.sort==='low'){const f=d=>d3.sum(share(d,st.s,y).slice(0,3));idx.sort((a,b)=>f(inds[b])-f(inds[a]));}
