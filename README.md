@@ -2,7 +2,7 @@
 
 業種ごとの就労人数（男女別）と給与レンジの構成を1枚で見るインタラクティブな可視化です。
 
-公開ページ: https://visualizing-jp.github.io/japan-salary-by-industry/
+公開ページ: https://japan-salary-by-industry.structure-and-representation.com/
 
 - 上下の線は業種ごとの就労人数で、上半分が男性、下半分が女性です。
 - 中央の円盤は、その業種の中で各給与レンジにいる人の割合です。「400万円超 500万円以下」を基準に、多いほど紺、少ないほどオレンジで着色しています。
@@ -25,17 +25,17 @@
 | `industry` | 拡大表示する業種。統計表の業種コード 1〜14 | `industry=5` |
 | `compare` | 拡大表示で男女を並べるとき `1` | `compare=1` |
 
-例: `https://visualizing-jp.github.io/japan-salary-by-industry/#year=2020&industry=5&compare=1`
+例: `https://japan-salary-by-industry.structure-and-representation.com/#year=2020&industry=5&compare=1`
 
 ## 試作: 回せる立体
 
-[https://visualizing-jp.github.io/japan-salary-by-industry/object/](https://visualizing-jp.github.io/japan-salary-by-industry/object/)
+[https://japan-salary-by-industry.structure-and-representation.com/object/](https://japan-salary-by-industry.structure-and-representation.com/object/)
 
 1業種の給与レンジを、積み木のような立体にした試作です（`object/`）。ドラッグで回せ、業種を替えると円盤が上から落ちて積み上がります。描画には同梱の Three.js（`vendor/three/`）を使い、データと配色は本体と共用しています。URL の `industry`・`year`・`sex` で表示内容を指定できます。
 
 ## 試作: 14業種の立体を並べる
 
-[https://visualizing-jp.github.io/japan-salary-by-industry/objects/](https://visualizing-jp.github.io/japan-salary-by-industry/objects/)
+[https://japan-salary-by-industry.structure-and-representation.com/objects/](https://japan-salary-by-industry.structure-and-representation.com/objects/)
 
 同じ積み木を14業種ぶん台の上に並べた試作です（`objects/`）。全体を回して見比べ、積み木をクリックするとその業種だけが残り、左に概要、右に各層の給与レンジ・割合・人数が出ます。業種名は、ほかの積み木と重ならない位置に置き、重なるときは隠します。円盤の面積は「業種内の割合」と「人数」を切り替えられ、人数にすると全業種で同じ尺度になります。寄った状態で「男女を並べる」を押すと、男性と女性の積み木が左右に並び、その間に各層の割合と人数が出ます。URL の `size=count`・`year`・`sex`・`industry`・`compare=1` で表示内容を指定できます。立体の部品（円盤の形、積み重ね、光）は `object/toy.js` にあり、2つの試作で共用しています。
 
