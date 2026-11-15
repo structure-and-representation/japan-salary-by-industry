@@ -6,29 +6,29 @@
 <title>業種別 給与レンジを1業種ずつ見る</title>
 <meta name="description" content="業種ごとの給与レンジの構成を、回して眺められる積み木のような立体で1業種ずつ見る。">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/style.css?v=8cc331d4">
-<link rel="stylesheet" href="object.css?v=8cc331d4">
-<meta name="build" content="8cc331d4">
+<link rel="stylesheet" href="../css/style.css?v=53b26f33">
+<link rel="stylesheet" href="object.css?v=53b26f33">
+<meta name="build" content="53b26f33">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "../vendor/three/three.module.min.js?v=8cc331d4",
-  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=8cc331d4",
-  "../js/closeup.js": "../js/closeup.js?v=8cc331d4",
-  "../js/colors.js": "../js/colors.js?v=8cc331d4",
-  "../js/config.js": "../js/config.js?v=8cc331d4",
-  "../js/controls.js": "../js/controls.js?v=8cc331d4",
-  "../js/data.js": "../js/data.js?v=8cc331d4",
-  "../js/discs.js": "../js/discs.js?v=8cc331d4",
-  "../js/format.js": "../js/format.js?v=8cc331d4",
-  "../js/layout.js": "../js/layout.js?v=8cc331d4",
-  "../js/main.js": "../js/main.js?v=8cc331d4",
-  "../js/overview.js": "../js/overview.js?v=8cc331d4",
-  "../js/state.js": "../js/state.js?v=8cc331d4",
-  "../js/url.js": "../js/url.js?v=8cc331d4",
-  "./object.js": "./object.js?v=8cc331d4",
-  "./toy.js": "./toy.js?v=8cc331d4"
+  "three": "../vendor/three/three.module.min.js?v=53b26f33",
+  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=53b26f33",
+  "../js/closeup.js": "../js/closeup.js?v=53b26f33",
+  "../js/colors.js": "../js/colors.js?v=53b26f33",
+  "../js/config.js": "../js/config.js?v=53b26f33",
+  "../js/controls.js": "../js/controls.js?v=53b26f33",
+  "../js/data.js": "../js/data.js?v=53b26f33",
+  "../js/discs.js": "../js/discs.js?v=53b26f33",
+  "../js/format.js": "../js/format.js?v=53b26f33",
+  "../js/layout.js": "../js/layout.js?v=53b26f33",
+  "../js/main.js": "../js/main.js?v=53b26f33",
+  "../js/overview.js": "../js/overview.js?v=53b26f33",
+  "../js/state.js": "../js/state.js?v=53b26f33",
+  "../js/url.js": "../js/url.js?v=53b26f33",
+  "./object.js": "./object.js?v=53b26f33",
+  "./toy.js": "./toy.js?v=53b26f33"
  }
 }
 </script>
@@ -51,6 +51,8 @@
       <div class="seg" id="sex" role="group" aria-label="対象">
         <button type="button" data-s="0">男女計</button><button type="button" data-s="1">男性</button><button type="button" data-s="2">女性</button>
       </div></div>
+    <div class="ctl"><label for="scheme">配色</label>
+      <select id="scheme"><option value="PuOr">オレンジ〜紫</option><option value="RdBu">赤〜青</option><option value="RdYlBu">赤〜黄〜青</option><option value="BrBG">茶〜青緑</option><option value="PiYG">ピンク〜緑</option><option value="PRGn">紫〜緑</option></select></div>
   </div>
   <div class="stage">
     <div class="view" id="view"><canvas id="canvas" aria-label="給与レンジの円盤を積み重ねた立体"></canvas>
@@ -69,6 +71,6 @@
   </footer>
 </main>
 <script src="../vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="object.js?v=8cc331d4"></script>
+<script type="module" src="object.js?v=53b26f33"></script>
 </body>
 </html>

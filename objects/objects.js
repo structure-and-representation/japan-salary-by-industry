@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BAND_COUNT, DISC, SEX, SEX_LABELS, SEX_KEYS } from '../js/config.js';
 import { loadData, bandShares, bandCounts } from '../js/data.js';
-import { bandColor, storedScheme } from '../js/colors.js';
+import { bandColor, storedScheme, storeScheme, DEFAULT_SCHEME } from '../js/colors.js';
 import { formatPercent, formatSalary, formatWorkers } from '../js/format.js';
 import { readUrlState } from '../js/url.js';
 import { STACK_HEIGHT, DISC_HEIGHT, restY, createDiscGeometry, createStack, addLightsAndFloor, createRenderer, setupYearPicker } from '../object/toy.js';
@@ -14,11 +14,14 @@ const $ = (id) => document.getElementById(id);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---- 並べ方（単位は円盤の最大半径を約1とする）
-const CELL_WIDTH = 2.1; // 積み木の横の間隔
-const CELL_DEPTH = 5.4; // 奥行きの間隔。手前に業種名を置く余白を含む
+// 積み木の横の間隔。行が3つ以上（幅の狭い画面）では、業種名どうしが横でぶつからないよう広げる
+const cellWidthFor = (rows) => (rows <= 2 ? 2.1 : 2.6);
+const CELL_DEPTH = 6.6; // 奥行きの間隔の下限。業種名が入らないときは、これより広げる
 const SHARE_MAX_RADIUS = 0.85; // 割合が上限（60%）のときの半径
 const COUNT_MAX_RADIUS = 0.98; // 人数が全体で最大の層の半径
-const VIEW_ELEVATION = 1.0; // 視線の傾き（上から見下ろす度合い）
+// 視線の傾き（上から見下ろす度合い）。行が2つまでなら横寄りから、3つ以上（幅の狭い画面）なら
+// 奥の行が小さくなりすぎないよう上寄りから見る
+const viewElevation = (rows) => (rows <= 2 ? 0.65 : 1.0);
 const WAVE_DELAY = 0.09; // 最初に積むとき、業種1つごとの遅れ（秒）
 /** 画面の縦横比から、1行に並べる数を決める */
 const columnsFor = (aspect, count) => (aspect > 3 ? count : aspect > 1.05 ? Math.ceil(count / 2) : 4);
@@ -29,7 +32,11 @@ const FOCUS_WIDTH_RATIO = 0.42; // 積み木の幅が、表示領域の幅に占
 const NARROW_VIEW = 620; // 表示領域の幅がこれより狭いとき、詰めた組み方にする
 const LABEL_GAP = 30; // 積み木の端から、層のラベルまでの距離（px）
 const COMPARE_AZIMUTH_RANGE = 1.0; // 男女を並べたとき、左右に回せる角度（ラジアン）。左右が入れ替わらない範囲にする
-const LABEL_MARGIN = 6; // 業種名と、ほかの積み木との間に空ける余白（px）
+const TIGHT_CELL_PX = 112; // 積み木の間隔がこれ（px）より狭いとき、業種名の幅を詰める
+/** 配色の基準にしている層（400万円超 500万円以下）。全体の平均給与がここに入る */
+const BASELINE_BAND = 4;
+const LABEL_MARGIN = 6;
+const LABEL_OFFSETS = [5, 11, 17, 23, 29, 35]; // 業種名を積み木からどれだけ離して置くか（px）。近い順に試す // 業種名と、ほかの積み木との間に空ける余白（px）
 /** 幅が狭いときの給与レンジ名 */
 const shortBandLabel = (band) => (band === 0 ? '100万以下' : band === BAND_COUNT - 1 ? '800万超' : `${band}00〜${band + 1}00万`);
 const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
@@ -78,12 +85,12 @@ async function start() {
   const goals = stacks.map(() => new THREE.Vector3());
 
   // 画角を狭くして、端の積み木が傾いて見えるのを抑える
-  const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 400);
+  const camera = new THREE.PerspectiveCamera(20, 1, 0.1, 500);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.screenSpacePanning = false; // 平行移動は床に沿って
   controls.minDistance = 2.6;
-  controls.maxDistance = 140;
+  controls.maxDistance = 200;
   controls.maxPolarAngle = Math.PI / 2 - 0.03; // 床の下には回り込ませない
 
   let dirty = true; // 次のフレームで描き直す必要があるか
@@ -111,6 +118,7 @@ async function start() {
 
   // ---- 並べ方と全体の視点
   let home = null;
+  let grid = { columns: 1, rows: 1 };
   function layout() {
     viewSize = { w: view.clientWidth, h: view.clientHeight };
     renderer.setSize(viewSize.w, viewSize.h, false);
@@ -120,26 +128,74 @@ async function start() {
     dirty = true;
     const columns = columnsFor(camera.aspect, count);
     const rows = Math.ceil(count / columns);
+    grid = { columns, rows };
+  }
+  /**
+   * 積み木の置き場所と、全体の視点を決める。
+   * 積み木と、いちばん手前の行の業種名までが表示領域に収まり、
+   * 奥の行の業種名が手前の行の積み木に重ならないだけ、行の間隔を空ける。
+   * 業種名の高さ（px）を使うので、文字を入れたあとに呼ぶ
+   */
+  function arrange(retried = false) {
+    const direction = new THREE.Vector3(0, viewElevation(grid.rows), 1).normalize();
+    const sin = direction.y; // 見下ろす角度の正弦
+    const cos = Math.sqrt(1 - sin * sin);
+    const labelHeight = Math.max(...labels.map((label) => label.height)) + 8;
+    // 床の上で積み木が占める横の範囲（端の積み木の半径ぶんを含む）
+    const cellWidth = cellWidthFor(grid.rows);
+    const width = (grid.columns - 1) * cellWidth + 2;
+    const stackRise = STACK_HEIGHT * cos; // 積み木の高さが、画面上で上へ伸びるぶん
+    // 行の間隔と画面上の縮尺は互いに依存するので、数回くり返して決める
+    let cellDepth = CELL_DEPTH;
+    let depth;
+    let pxPerUnit;
+    for (let pass = 0; pass < 5; pass += 1) {
+      depth = (grid.rows - 1) * cellDepth + 2;
+      // 画面上の縦の広がり = 奥行き + 奥の行の積み木の高さ + 手前の行の業種名。
+      // 手前の行は遠近法で大きく見えるので、横は余裕を持たせる
+      pxPerUnit = Math.min((0.88 * viewSize.w) / width, (0.96 * viewSize.h - labelHeight) / (depth * sin + stackRise));
+      // 奥の行の足元から手前の行の積み木の上端までに、業種名が入るだけの間隔
+      const needed = (labelHeight + LABEL_MARGIN * 2 + LABEL_OFFSETS.at(-1)) / (pxPerUnit * sin) + stackRise / sin + 1.9;
+      if (grid.rows < 2 || needed <= cellDepth) break;
+      cellDepth = needed;
+    }
+    // 積み木の間隔が画面上で狭いときは、業種名の幅を詰める。幅が変わると高さも変わるので、測り直してやり直す
+    const tight = cellWidth * pxPerUnit < TIGHT_CELL_PX;
+    if (tight !== view.classList.contains('tight')) {
+      view.classList.toggle('tight', tight);
+      measureLabels();
+      if (!retried) { arrange(true); return; }
+    }
     stacks.forEach((stack, i) => {
-      const column = i % columns;
-      const row = Math.floor(i / columns);
-      homes[i].set((column - (columns - 1) / 2) * CELL_WIDTH, 0, (row - (rows - 1) / 2) * CELL_DEPTH);
+      const column = i % grid.columns;
+      const row = Math.floor(i / grid.columns);
+      homes[i].set((column - (grid.columns - 1) / 2) * cellWidth, 0, (row - (grid.rows - 1) / 2) * cellDepth);
       goals[i].copy(homes[i]);
       stack.group.position.copy(homes[i]);
     });
-    // 全体が収まる距離: 横幅と、見下ろしたときの奥行き＋高さの両方で決める
-    const width = columns * CELL_WIDTH + 0.6;
-    const depth = rows * CELL_DEPTH;
-    const direction = new THREE.Vector3(0, VIEW_ELEVATION, 1).normalize();
-    const elevation = Math.asin(direction.y);
-    const vertical = depth * Math.sin(elevation) + STACK_HEIGHT * Math.cos(elevation);
-    const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const distance = Math.max(width / 2 / (tanV * camera.aspect), vertical / 2 / tanV) * 1.03;
-    // 手前の行の業種名が入るよう、注視点を少し手前に置く
-    const target = new THREE.Vector3(0, 0, CELL_DEPTH * 0.16);
+    let distance = viewSize.h / 2 / (pxPerUnit * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    // 上に積み木の高さ、下に業種名がはみ出すぶんの差だけ、注視点を前後にずらして上下の余白をそろえる
+    const target = new THREE.Vector3(0, 0, (labelHeight / pxPerUnit - stackRise) / (2 * sin));
+    // ここまでは遠近法を無視した見積もり。手前の行は大きく映るので、実際に投影して確かめ、
+    // 積み木か業種名がはみ出すあいだは少しずつ離れる（円盤が最大の大きさだとして確かめる）
+    const saved = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
+    const edgePoints = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const fits = () => homes.every((at) => edgePoints.every(([dx, dz]) => [0, STACK_HEIGHT].every((y) => {
+      const p = toScreen(at.x + dx, y, at.z + dz);
+      return p.x > 4 && p.x < viewSize.w - 4 && p.y > 4 && p.y < viewSize.h - 4 - (y === 0 ? labelHeight : 0);
+    })));
+    for (let pass = 0; pass < 16; pass += 1) {
+      camera.position.copy(target).addScaledVector(direction, distance);
+      camera.lookAt(target);
+      camera.updateMatrixWorld();
+      if (fits()) break;
+      distance *= 1.05;
+    }
+    camera.position.copy(saved.position);
+    camera.quaternion.copy(saved.quaternion);
+    camera.updateMatrixWorld();
     home = { position: target.clone().addScaledVector(direction, distance), target };
   }
-  const goHome = () => { releasePair(); flyTo(home.position.clone(), home.target.clone()); };
   /** 全部の積み木を格子の位置へ戻し、回せる範囲の制限を外す */
   function releasePair() {
     goals.forEach((goal, i) => goal.copy(homes[i]));
@@ -212,23 +268,52 @@ async function start() {
     return { el, width: 0, height: 0 };
   });
   const measureLabels = () => labels.forEach((label) => { label.width = label.el.offsetWidth; label.height = label.el.offsetHeight; });
+  /** 矩形が、円盤（上面と底面の楕円と、その間）に重なるか。円盤のまわりに余白ぶんの幅を持たせる */
+  function rectHitsDisc(rect, layer) {
+    const rx = layer.rx + LABEL_MARGIN;
+    const ry = layer.ry + LABEL_MARGIN;
+    if (rect.left < layer.cx + rx && rect.right > layer.cx - rx && rect.top < layer.bottomY && rect.bottom > layer.topY) return true;
+    return [layer.topY, layer.bottomY].some((cy) => {
+      const px = Math.min(Math.max(layer.cx, rect.left), rect.right);
+      const py = Math.min(Math.max(cy, rect.top), rect.bottom);
+      return ((px - layer.cx) / rx) ** 2 + ((py - cy) / ry) ** 2 < 1;
+    });
+  }
   function placeLabels() {
-    const boxes = stacks.map((stack) => (stack.visible ? screenBox(stack) : null));
+    // 積み木ごとの、画面上の形と上下の端
+    const shapes = stacks.map((stack) => {
+      if (!stack.visible) return null;
+      const shape = stackOnScreen(stack);
+      const layers = shape.layers.filter((layer) => layer.exists);
+      if (!layers.length || shape.behind) return null;
+      return {
+        layers,
+        centerX: shape.baseX,
+        top: Math.min(...layers.map((layer) => layer.topY - layer.ry)),
+        bottom: Math.max(...layers.map((layer) => layer.bottomY + layer.ry)),
+      };
+    });
     const placed = [];
     // 手前の積み木から順に場所を取る
-    const order = stacks.map((unused, i) => i).sort((a, b) => (boxes[b]?.bottom ?? 0) - (boxes[a]?.bottom ?? 0));
+    const order = stacks.map((unused, i) => i).sort((a, b) => (shapes[b]?.bottom ?? 0) - (shapes[a]?.bottom ?? 0));
     order.forEach((i) => {
       const label = labels[i];
-      const box = boxes[i];
+      const shape = shapes[i];
       let rect = null;
-      if (state.focus === null && box && !box.behind) {
+      if (state.focus === null && shape) {
         // 横は表示領域からはみ出さないよう寄せる
-        const left = Math.min(Math.max((box.left + box.right) / 2 - label.width / 2, 2), viewSize.w - label.width - 2);
+        const left = Math.min(Math.max(shape.centerX - label.width / 2, 2), viewSize.w - label.width - 2);
         const at = (top) => ({ left, right: left + label.width, top, bottom: top + label.height });
         const free = (r) => r.top > 0 && r.bottom < viewSize.h
-          && boxes.every((other, j) => j === i || !other || !overlaps(r, { left: other.left - LABEL_MARGIN, right: other.right + LABEL_MARGIN, top: other.top - LABEL_MARGIN, bottom: other.bottom + LABEL_MARGIN }))
+          && shapes.every((other, j) => j === i || !other || !other.layers.some((layer) => rectHitsDisc(r, layer)))
           && placed.every((other) => !overlaps(r, other));
-        rect = [at(box.bottom + 5), at(box.top - label.height - 5)].find(free) ?? null;
+        // 積み木のすぐ下。隣の積み木の張り出しに重なるなら、少しずつ下げる。
+        // それでも重なるなら上に置き、上も重なるなら隠す
+        const candidates = [
+          ...LABEL_OFFSETS.map((offset) => at(shape.bottom + offset)),
+          ...LABEL_OFFSETS.map((offset) => at(shape.top - label.height - offset)),
+        ];
+        rect = candidates.find(free) ?? null;
       }
       label.el.style.opacity = rect ? 1 : 0;
       if (rect) { label.el.style.transform = `translate(${rect.left}px,${rect.top}px)`; placed.push(rect); }
@@ -267,8 +352,9 @@ async function start() {
       const top = toScreen(x, restY(band) + DISC_HEIGHT, z);
       const bottom = toScreen(x, restY(band), z);
       const rx = (rightEdge.x - leftEdge.x) / 2;
-      return { rightEdge, leftEdge, cx: (top.x + bottom.x) / 2, topY: top.y, bottomY: bottom.y, rx, ry: rx * tilt, exists: disc.targetRadius > 0.001 };
+      return { rightEdge, leftEdge, cx: (top.x + bottom.x) / 2, topY: top.y, bottomY: bottom.y, rx, ry: rx * tilt, exists: disc.targetRadius > 0.001, behind: top.behind || bottom.behind };
     });
+    const base = toScreen(x, 0, z);
     // 引き出し線が円盤の上を横切らないよう、線は「その高さで見えている輪郭」から出す
     const reach = (layer, y) => {
       if (!layer.exists) return null;
@@ -277,6 +363,8 @@ async function start() {
     };
     return {
       layers,
+      baseX: base.x, // 積み木の足元の中心
+      behind: base.behind || layers.some((layer) => layer.behind),
       /** 高さ y で、いちばん右（side=1）または左（side=-1）に見えている輪郭の x */
       silhouetteX(y, side) {
         const xs = layers.map((layer) => { const half = reach(layer, y); return half === null ? null : layer.cx + side * half; }).filter((v) => v !== null);
@@ -386,11 +474,14 @@ async function start() {
     });
     measureLabels();
     updateYearPicker(y);
-    document.querySelectorAll('#sex button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.s === sex));
+    // 「男女を並べる」は、業種に寄っているときだけ使える
+    document.querySelectorAll('#sex button').forEach((b) => {
+      const isPair = b.dataset.s === 'compare';
+      b.setAttribute('aria-pressed', isPair ? comparing() : !comparing() && +b.dataset.s === sex);
+      if (isPair) b.disabled = state.focus === null;
+    });
     document.querySelectorAll('#size button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === state.size));
     $('reset').hidden = state.focus === null;
-    $('pair').hidden = state.focus === null;
-    $('pair').setAttribute('aria-pressed', state.compare);
     if (state.focus !== null) {
       const industry = industries[state.focus];
       const swatch = (band) => `<i style="background:${bandColor(state.scheme, band)}"></i>`;
@@ -434,6 +525,7 @@ async function start() {
     if (state.sex !== SEX.TOTAL) params.set('sex', SEX_KEYS[state.sex]);
     if (state.focus !== null) params.set('industry', industries[state.focus].code);
     if (comparing()) params.set('compare', '1');
+    if (state.scheme !== DEFAULT_SCHEME) params.set('scheme', state.scheme);
     const hash = params.toString();
     try { history.replaceState(null, '', location.pathname + (hash ? `#${hash}` : '')); } catch (e) { /* 書き換えられない環境でも表示は続ける */ }
   }
@@ -454,7 +546,8 @@ async function start() {
     writeUrl();
   }
   function setFocus(index) {
-    update({ focus: index, hover: null });
+    // 全体に戻るときは、男女を並べるのもやめる
+    update(index === null ? { focus: null, hover: null, compare: false } : { focus: index, hover: null });
     if (index === null) goHome(); else goFocus(index);
   }
 
@@ -463,15 +556,16 @@ async function start() {
   document.querySelectorAll('#sex button').forEach((b) => {
     b.onclick = () => {
       const wasComparing = comparing();
-      update({ sex: +b.dataset.s, compare: false });
-      if (wasComparing) goFocus(state.focus);
+      if (b.dataset.s === 'compare') update({ compare: true });
+      else update({ sex: +b.dataset.s, compare: false });
+      if (comparing() !== wasComparing) goFocus(state.focus);
     };
   });
-  $('pair').onclick = () => { update({ compare: !state.compare }); goFocus(state.focus); };
   document.querySelectorAll('#size button').forEach((b) => { b.onclick = () => update({ size: b.dataset.v }); });
   $('reset').onclick = () => setFocus(null);
-  $('bandlegend').innerHTML = Array.from({ length: BAND_COUNT }, (unused, i) => BAND_COUNT - 1 - i)
-    .map((band) => `<span><i style="background:${bandColor(state.scheme, band)}"></i>${data.bandLabels[band]}</span>`).join('');
+  // 配色を替えたら、積み木・凡例・ラベルの色見本を塗り直し、次に開いたときのために覚えておく
+  $('scheme').value = state.scheme;
+  $('scheme').onchange = (e) => { state.scheme = e.target.value; storeScheme(state.scheme); recolor(); };
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.focus !== null) setFocus(null); });
 
   const raycaster = new THREE.Raycaster();
@@ -552,17 +646,29 @@ async function start() {
   new ResizeObserver(() => {
     layout();
     renderText();
+    arrange();
     if (state.focus === null) { camera.position.copy(home.position); controls.target.copy(home.target); } else goFocus(state.focus);
   }).observe(view);
   layout();
+  stacks.forEach((stack) => stack.setColors(state.scheme));
+  mate.setColors(state.scheme);
+  update({}, { wave: true });
+  arrange();
   camera.position.copy(home.position);
   controls.target.copy(home.target);
-  stacks.forEach((stack) => stack.setColors(state.scheme));
-  update({}, { wave: true });
   if (state.focus !== null) goFocus(state.focus);
   frame();
 
-  const recolor = () => { stacks.forEach((stack) => stack.setColors(state.scheme)); update({}); dirty = true; };
+  /** 配色やテーマ（明暗）が変わったとき、色に関わるものをすべて塗り直す */
+  function recolor() {
+    stacks.forEach((stack) => stack.setColors(state.scheme));
+    // 色の凡例は縦に、上が高い給与。色見本をすき間なく積み、基準の層を境に2方向へ分かれる配色だと分かるようにする
+    $('bandlegend').innerHTML = Array.from({ length: BAND_COUNT }, (unused, i) => BAND_COUNT - 1 - i)
+      .map((band) => `<li${band === BASELINE_BAND ? ' class="base"' : ''}><i style="background:${bandColor(state.scheme, band)}"></i><span>${data.bandLabels[band]}</span>${band === BASELINE_BAND ? '<em>基準</em>' : ''}</li>`).join('');
+    update({});
+    dirty = true;
+  }
+  recolor();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
   new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 }

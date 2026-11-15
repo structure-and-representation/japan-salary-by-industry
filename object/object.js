@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DISC, SEX, SEX_LABELS, SEX_KEYS } from '../js/config.js';
 import { loadData, bandShares } from '../js/data.js';
-import { storedScheme } from '../js/colors.js';
+import { storedScheme, storeScheme, DEFAULT_SCHEME } from '../js/colors.js';
 import { formatPercent, formatSalary, formatWorkers } from '../js/format.js';
 import { readUrlState } from '../js/url.js';
 import { STACK_HEIGHT, createDiscGeometry, createStack, addLightsAndFloor, createRenderer, setupYearPicker, bandTableRows } from './toy.js';
@@ -78,6 +78,7 @@ async function start() {
     params.set('industry', data.industries[state.industryIndex].code);
     if (state.yearIndex !== data.years.length - 1) params.set('year', data.years[state.yearIndex]);
     if (state.sex !== SEX.TOTAL) params.set('sex', SEX_KEYS[state.sex]);
+    if (state.scheme !== DEFAULT_SCHEME) params.set('scheme', state.scheme);
     try { history.replaceState(null, '', `${location.pathname}#${params}`); } catch (e) { /* 書き換えられない環境でも表示は続ける */ }
   }
   /** drop: 円盤を上から落として積み直す（業種を替えたとき） */
@@ -99,6 +100,9 @@ async function start() {
   $('prev').onclick = () => stepIndustry(-1);
   $('next').onclick = () => stepIndustry(1);
   document.querySelectorAll('#sex button').forEach((b) => { b.onclick = () => update({ sex: +b.dataset.s }); });
+  // 配色を替えたら、積み木と表の色見本を塗り直し、次に開いたときのために覚えておく
+  $('scheme').value = state.scheme;
+  $('scheme').onchange = (e) => { state.scheme = e.target.value; storeScheme(state.scheme); recolor(); };
   $('reset').onclick = () => { camera.position.copy(HOME); controls.target.copy(target); controls.autoRotate = false; };
 
   // 円盤と表の行を、互いに強調する
@@ -143,7 +147,7 @@ async function start() {
   update({}, { drop: true });
   frame();
 
-  const recolor = () => { stack.setColors(state.scheme); update({}); dirty = true; };
+  function recolor() { stack.setColors(state.scheme); update({}); dirty = true; }
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
   new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 }
