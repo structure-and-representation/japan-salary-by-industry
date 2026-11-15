@@ -1,0 +1,11 @@
+{
+  "name": "japan-salary-by-industry",
+  "private": true,
+  "type": "module",
+  "description": "業種ごとの就労人数と給与レンジのインタラクティブな可視化",
+  "scripts": {
+    "build:data": "node scripts/build-data.mjs",
+    "verify": "node scripts/verify-data.mjs",
+    "serve": "python3 -m http.server 8000"
+  }
+}

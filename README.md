@@ -18,7 +18,47 @@
 
 ## 構成
 
-`index.html` 1ファイルで動きます。`closeup/index.html` は、以前のURLからトップへ転送するためだけのページです。描画には D3 v7（CDN）を使っています。
+| 場所 | 内容 |
+| --- | --- |
+| `index.html` | ページの骨組み |
+| `css/style.css` | スタイル |
+| `js/main.js` | 起動と配線。状態の変化を、必要な描画だけにつなぐ |
+| `js/config.js` | 定数（円盤・線の尺度、業種名の改行位置など） |
+| `js/data.js` | データの読み込みと、割合・表示順の計算 |
+| `js/state.js` | 画面の状態（年、対象、並び順、配色など） |
+| `js/layout.js` | 表示幅から決まる配置（横並び／縦積み）の座標 |
+| `js/discs.js` | 円盤の積み重ねの描画。一覧と拡大表示で共用 |
+| `js/overview.js` | 一覧（上下の流れと業種ごとの円盤） |
+| `js/closeup.js` | 拡大表示 |
+| `js/controls.js` | 操作部と凡例 |
+| `js/colors.js` | 配色 |
+| `js/format.js` | 数値の表示形式 |
+| `data/salary.json` | 表示用のデータ（下の手順で生成） |
+| `scripts/` | データの生成と検証 |
+| `vendor/` | 同梱している D3 v7.9.0 |
+
+ビルドは不要です。ES モジュールと `fetch` を使っているので、手元で開くときはファイルを直接開かず、簡易サーバーを立ててください。
+
+```
+npm run serve   # http://localhost:8000/
+```
+
+## データの更新
+
+新しい年分が [data-of-japan](https://github.com/dataofjapan/data-of-japan) に入ったら、そのリポジトリを手元に取得して次を実行します。
+
+```
+node scripts/build-data.mjs <data-of-japan>/apps/society/work-category/public/data <コミットID>
+```
+
+`data/salary.json` を書き出す前に、次の点を自動で確かめます。問題があれば書き出さずに止まります。`npm run verify` で、いまのデータだけを確かめることもできます。
+
+- 給与レンジ別の人数の合計が、就労人数と一致すること
+- 男性と女性の合計が、男女計と一致すること
+- どのレンジの割合も、円盤の半径スケールの上限（60%）を超えないこと
+- 全体の平均給与が、基準にしている「400万円超 500万円以下」に入っていること
+
+元データで欠損しているセルは `null` のまま持ち、表示では 0 として扱います。欠損の数は `data/salary.json` の `source.missingCells` に記録しています。
 
 ## 制作
 
