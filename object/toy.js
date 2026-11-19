@@ -39,7 +39,15 @@ const pegMaterial = new THREE.MeshStandardMaterial({ color: 0xcaa574, roughness:
  * 1業種ぶんの積み重ね。芯棒に9枚の円盤を通す。
  * 半径と高さは目標値を持ち、step() のたびに目標へ近づく。
  */
-export function createStack(geometry, userData = {}) {
+/** 着地の速さを 0〜1 にならすときの基準（円盤が落ちてくる途中の、おおよその最高の速さ） */
+const LANDING_SPEED = 16;
+/** 置き場所までこの距離に来たら、着地したとみなす */
+const LANDING_GAP = DISC_HEIGHT * 0.2;
+
+/**
+ * onLand({ band, radius, speed }) は、落ちてきた円盤が着地した瞬間に呼ばれる（効果音に使う）。
+ */
+export function createStack(geometry, userData = {}, onLand = null) {
   const group = new THREE.Group();
   const peg = new THREE.Mesh(pegGeometry, pegMaterial);
   peg.position.y = (STACK_HEIGHT + PEG_TOP) / 2;
@@ -52,7 +60,7 @@ export function createStack(geometry, userData = {}) {
     mesh.receiveShadow = true;
     mesh.userData = { ...userData, band };
     group.add(mesh);
-    return { mesh, radius: 0, targetRadius: 0, y: restY(band), velocity: 0, delay: 0 };
+    return { mesh, radius: 0, targetRadius: 0, y: restY(band), velocity: 0, delay: 0, falling: false, fallSpeed: 0 };
   });
 
   // 大きさ。ほかの業種に寄っている間は、目標を 0 にして、その場で縮めて消す。
@@ -101,6 +109,8 @@ export function createStack(geometry, userData = {}) {
           disc.y = restY(band) + DROP_HEIGHT;
           disc.velocity = 0;
           disc.delay = startDelay + band * DROP_STAGGER;
+          disc.falling = true;
+          disc.fallSpeed = 0;
         }
       });
     },
@@ -121,6 +131,15 @@ export function createStack(geometry, userData = {}) {
         else {
           disc.velocity += ((restY(band) - disc.y) * 150 - disc.velocity * 17) * dt;
           disc.y += disc.velocity * dt;
+          // 落ちてきて、置き場所のすぐ上まで初めて届いた瞬間が着地。
+          // 描画が遅い環境では置き場所を通り越さずに止まるので、「通り越したら」ではなく「届いたら」で判定する
+          if (disc.falling) {
+            disc.fallSpeed = Math.max(disc.fallSpeed, -disc.velocity);
+            if (disc.y - restY(band) <= LANDING_GAP) {
+              disc.falling = false;
+              if (onLand && disc.targetRadius > 0.001 && scale > 0.5) onLand({ band, radius: disc.targetRadius, speed: Math.min(1, disc.fallSpeed / LANDING_SPEED) });
+            }
+          }
         }
         disc.mesh.visible = disc.radius > 0.001 && disc.delay <= 0;
         const r = Math.max(disc.radius, 0.001);

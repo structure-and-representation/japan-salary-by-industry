@@ -22,31 +22,32 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=01540123">
-<link rel="stylesheet" href="object/object.css?v=01540123">
-<link rel="stylesheet" href="objects/objects.css?v=01540123">
-<meta name="build" content="01540123">
+<link rel="stylesheet" href="css/style.css?v=0402cc5e">
+<link rel="stylesheet" href="object/object.css?v=0402cc5e">
+<link rel="stylesheet" href="objects/objects.css?v=0402cc5e">
+<meta name="build" content="0402cc5e">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "./vendor/three/three.module.min.js?v=01540123",
-  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=01540123",
-  "./js/closeup.js": "./js/closeup.js?v=01540123",
-  "./js/colors.js": "./js/colors.js?v=01540123",
-  "./js/config.js": "./js/config.js?v=01540123",
-  "./js/controls.js": "./js/controls.js?v=01540123",
-  "./js/data.js": "./js/data.js?v=01540123",
-  "./js/discs.js": "./js/discs.js?v=01540123",
-  "./js/format.js": "./js/format.js?v=01540123",
-  "./js/layout.js": "./js/layout.js?v=01540123",
-  "./js/main.js": "./js/main.js?v=01540123",
-  "./js/overview.js": "./js/overview.js?v=01540123",
-  "./js/state.js": "./js/state.js?v=01540123",
-  "./js/url.js": "./js/url.js?v=01540123",
-  "./object/object.js": "./object/object.js?v=01540123",
-  "./object/toy.js": "./object/toy.js?v=01540123",
-  "./objects/objects.js": "./objects/objects.js?v=01540123"
+  "three": "./vendor/three/three.module.min.js?v=0402cc5e",
+  "three/addons/controls/OrbitControls.js": "./vendor/three/addons/controls/OrbitControls.js?v=0402cc5e",
+  "./js/closeup.js": "./js/closeup.js?v=0402cc5e",
+  "./js/colors.js": "./js/colors.js?v=0402cc5e",
+  "./js/config.js": "./js/config.js?v=0402cc5e",
+  "./js/controls.js": "./js/controls.js?v=0402cc5e",
+  "./js/data.js": "./js/data.js?v=0402cc5e",
+  "./js/discs.js": "./js/discs.js?v=0402cc5e",
+  "./js/format.js": "./js/format.js?v=0402cc5e",
+  "./js/layout.js": "./js/layout.js?v=0402cc5e",
+  "./js/main.js": "./js/main.js?v=0402cc5e",
+  "./js/overview.js": "./js/overview.js?v=0402cc5e",
+  "./js/state.js": "./js/state.js?v=0402cc5e",
+  "./js/url.js": "./js/url.js?v=0402cc5e",
+  "./object/object.js": "./object/object.js?v=0402cc5e",
+  "./object/sound.js": "./object/sound.js?v=0402cc5e",
+  "./object/toy.js": "./object/toy.js?v=0402cc5e",
+  "./objects/objects.js": "./objects/objects.js?v=0402cc5e"
  }
 }
 </script>
@@ -77,7 +78,7 @@
     <div id="labels" aria-hidden="true"></div>
     <div id="focusui"><svg id="leads" aria-hidden="true"></svg><div id="fhead"></div><div id="frows"></div>
       <div class="fsex" id="fmale">男性</div><div class="fsex" id="ffemale">女性</div></div>
-    <div class="viewbtns"><button id="reset" type="button" hidden>全体に戻る</button></div></div>
+    <div class="viewbtns"><button id="sound" type="button" aria-pressed="true">♪ 音あり</button><button id="restack" type="button">積みなおす</button><button id="reset" type="button" hidden>全体に戻る</button></div></div>
   <div id="bandlegend" class="bandlegend" aria-label="給与レンジの色"></div>
   <footer>
     <div class="fnote"><span>「人数」にすると、全業種で同じ尺度になります。大きい積み木ほど、その業種で働く人が多いことを表します。元の統計表に数値がない層は円盤がありません。</span>
@@ -86,6 +87,6 @@
   </footer>
 </main>
 <script src="vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="objects/objects.js?v=01540123"></script>
+<script type="module" src="objects/objects.js?v=0402cc5e"></script>
 </body>
 </html>

@@ -91,3 +91,9 @@ node scripts/build-data.mjs <data-of-japan>/apps/society/work-category/public/da
 ## 制作
 
 [矢崎裕一](https://notation.co.jp/)
+
+## 効果音
+
+円盤が着地するたびに、木琴のような短い音が鳴ります（`object/sound.js`。音声ファイルは使わず、Web Audio で合成）。
+層が上がるほど高い音、円盤が大きいほど低く大きな音です。ブラウザの決まりで、ページを開いてから最初の操作があるまでは音が出ません。
+表示領域の右下の「♪ 音あり／音なし」で切り替えられ、選んだ状態はブラウザに記憶されます。「積みなおす」で、もう一度落として積めます。

@@ -8,6 +8,7 @@ import { loadData, bandShares, bandCounts } from '../js/data.js';
 import { bandColor, storedScheme, storeScheme, DEFAULT_SCHEME } from '../js/colors.js';
 import { formatPercent, formatSalary, formatWorkers } from '../js/format.js';
 import { readUrlState } from '../js/url.js';
+import { createSound, setupSoundButton } from '../object/sound.js';
 import { STACK_HEIGHT, DISC_HEIGHT, restY, createDiscGeometry, createStack, addLightsAndFloor, createRenderer, setupYearPicker } from '../object/toy.js';
 
 const $ = (id) => document.getElementById(id);
@@ -69,13 +70,14 @@ async function start() {
   const scene = new THREE.Scene();
   addLightsAndFloor(scene, 20);
   const geometry = createDiscGeometry();
+  const sound = createSound();
   const stacks = industries.map((d) => {
-    const stack = createStack(geometry, { industry: d.index });
+    const stack = createStack(geometry, { industry: d.index }, sound.land);
     scene.add(stack.group);
     return stack;
   });
   // 男女を並べるときに使う、もう1つの積み木（女性）。ふだんは隠しておく
-  const mate = createStack(geometry, { industry: -1 });
+  const mate = createStack(geometry, { industry: -1 }, sound.land);
   mate.setVisible(false, true);
   scene.add(mate.group);
   // 積み木の置き場所。home は格子の位置、goal はいま向かっている位置（男女を並べる間は左右にずれる）
@@ -569,6 +571,10 @@ async function start() {
   });
   document.querySelectorAll('#size button').forEach((b) => { b.onclick = () => update({ size: b.dataset.v }); });
   $('reset').onclick = () => setFocus(null);
+  // 積みなおす: いま見えている積み木を、もう一度上から落として積む。動きを減らす設定では出さない
+  $('restack').hidden = reducedMotion;
+  $('restack').onclick = () => update({}, { wave: true });
+  setupSoundButton(sound, $('sound'));
   // 配色を替えたら、積み木・凡例・ラベルの色見本を塗り直し、次に開いたときのために覚えておく
   $('scheme').value = state.scheme;
   $('scheme').onchange = (e) => { state.scheme = e.target.value; storeScheme(state.scheme); recolor(); };

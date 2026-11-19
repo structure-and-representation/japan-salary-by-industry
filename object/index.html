@@ -13,29 +13,30 @@
 <title>業種別 給与レンジを1業種ずつ見る</title>
 <meta name="description" content="業種ごとの給与レンジの構成を、回して眺められる積み木のような立体で1業種ずつ見る。">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/style.css?v=01540123">
-<link rel="stylesheet" href="object.css?v=01540123">
-<meta name="build" content="01540123">
+<link rel="stylesheet" href="../css/style.css?v=0402cc5e">
+<link rel="stylesheet" href="object.css?v=0402cc5e">
+<meta name="build" content="0402cc5e">
 <!-- build:importmap（scripts/stamp-version.mjs が生成） -->
 <script type="importmap">
 {
  "imports": {
-  "three": "../vendor/three/three.module.min.js?v=01540123",
-  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=01540123",
-  "../js/closeup.js": "../js/closeup.js?v=01540123",
-  "../js/colors.js": "../js/colors.js?v=01540123",
-  "../js/config.js": "../js/config.js?v=01540123",
-  "../js/controls.js": "../js/controls.js?v=01540123",
-  "../js/data.js": "../js/data.js?v=01540123",
-  "../js/discs.js": "../js/discs.js?v=01540123",
-  "../js/format.js": "../js/format.js?v=01540123",
-  "../js/layout.js": "../js/layout.js?v=01540123",
-  "../js/main.js": "../js/main.js?v=01540123",
-  "../js/overview.js": "../js/overview.js?v=01540123",
-  "../js/state.js": "../js/state.js?v=01540123",
-  "../js/url.js": "../js/url.js?v=01540123",
-  "./object.js": "./object.js?v=01540123",
-  "./toy.js": "./toy.js?v=01540123"
+  "three": "../vendor/three/three.module.min.js?v=0402cc5e",
+  "three/addons/controls/OrbitControls.js": "../vendor/three/addons/controls/OrbitControls.js?v=0402cc5e",
+  "../js/closeup.js": "../js/closeup.js?v=0402cc5e",
+  "../js/colors.js": "../js/colors.js?v=0402cc5e",
+  "../js/config.js": "../js/config.js?v=0402cc5e",
+  "../js/controls.js": "../js/controls.js?v=0402cc5e",
+  "../js/data.js": "../js/data.js?v=0402cc5e",
+  "../js/discs.js": "../js/discs.js?v=0402cc5e",
+  "../js/format.js": "../js/format.js?v=0402cc5e",
+  "../js/layout.js": "../js/layout.js?v=0402cc5e",
+  "../js/main.js": "../js/main.js?v=0402cc5e",
+  "../js/overview.js": "../js/overview.js?v=0402cc5e",
+  "../js/state.js": "../js/state.js?v=0402cc5e",
+  "../js/url.js": "../js/url.js?v=0402cc5e",
+  "./object.js": "./object.js?v=0402cc5e",
+  "./sound.js": "./sound.js?v=0402cc5e",
+  "./toy.js": "./toy.js?v=0402cc5e"
  }
 }
 </script>
@@ -64,7 +65,7 @@
   </div>
   <div class="stage">
     <div class="view" id="view"><canvas id="canvas" aria-label="給与レンジの円盤を積み重ねた立体"></canvas>
-      <button id="reset" type="button">視点を戻す</button></div>
+      <div class="viewbtns"><button id="sound" type="button" aria-pressed="true">♪ 音あり</button><button id="restack" type="button">積みなおす</button><button id="reset" type="button">視点を戻す</button></div></div>
     <aside class="panel">
       <h2 id="name"></h2>
       <p id="meta"></p>
@@ -79,6 +80,6 @@
   </footer>
 </main>
 <script src="../vendor/d3.v7.9.0.min.js"></script>
-<script type="module" src="object.js?v=01540123"></script>
+<script type="module" src="object.js?v=0402cc5e"></script>
 </body>
 </html>

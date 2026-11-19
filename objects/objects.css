@@ -56,9 +56,7 @@
 #focusui.compare.narrow .frow{grid-template-columns:4.4em 3.9em 7.4em 3.9em 4.4em;width:auto;font-size:10.5px;gap:0 3px;padding:1px 3px}
 #focusui.compare.narrow .frow b{font-size:12px}
 
-.viewbtns{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
-.viewbtns button,.viewbtns #reset{position:static;font-size:12px;padding:3px 10px}
-.viewbtns button[hidden]{display:none}
+
 .bandlegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5px;color:var(--ink)}
 .bandlegend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .bandlegend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}

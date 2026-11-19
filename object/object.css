@@ -5,7 +5,11 @@
 .view{position:relative;flex:1 1 480px;min-width:0;height:min(68vh,620px);min-height:380px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--stage)}
 #canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 #canvas:active{cursor:grabbing}
-#reset{position:absolute;right:10px;bottom:10px;font-size:12px;padding:3px 10px}
+/* 表示領域の右下に並べるボタン（音、積みなおす、視点を戻す／全体に戻る） */
+.viewbtns{position:absolute;right:10px;bottom:10px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.viewbtns button{font-size:12px;padding:3px 10px}
+.viewbtns button[hidden]{display:none}
+#sound[aria-pressed="false"]{color:var(--ink-soft)}
 .panel{flex:0 1 330px;min-width:270px;display:flex;flex-direction:column;gap:8px}
 .panel h2{font-size:19px;margin:0;font-weight:700;line-height:1.35}
 #meta{margin:0;font-size:12px;color:var(--ink-soft)}

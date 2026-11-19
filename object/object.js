@@ -7,6 +7,7 @@ import { loadData, bandShares } from '../js/data.js';
 import { storedScheme, storeScheme, DEFAULT_SCHEME } from '../js/colors.js';
 import { formatPercent, formatSalary, formatWorkers } from '../js/format.js';
 import { readUrlState } from '../js/url.js';
+import { createSound, setupSoundButton } from './sound.js';
 import { STACK_HEIGHT, createDiscGeometry, createStack, addLightsAndFloor, createRenderer, setupYearPicker, bandTableRows } from './toy.js';
 
 const $ = (id) => document.getElementById(id);
@@ -30,7 +31,8 @@ async function start() {
   const renderer = createRenderer(canvas);
   const scene = new THREE.Scene();
   addLightsAndFloor(scene, 2.6);
-  const stack = createStack(createDiscGeometry());
+  const sound = createSound();
+  const stack = createStack(createDiscGeometry(), {}, sound.land);
   scene.add(stack.group);
 
   const target = new THREE.Vector3(0, STACK_HEIGHT * 0.45, 0);
@@ -103,6 +105,10 @@ async function start() {
   // 配色を替えたら、積み木と表の色見本を塗り直し、次に開いたときのために覚えておく
   $('scheme').value = state.scheme;
   $('scheme').onchange = (e) => { state.scheme = e.target.value; storeScheme(state.scheme); recolor(); };
+  // 積みなおす: 同じ業種を、もう一度上から落として積む。動きを減らす設定では出さない
+  $('restack').hidden = reducedMotion;
+  $('restack').onclick = () => update({}, { drop: true });
+  setupSoundButton(sound, $('sound'));
   $('reset').onclick = () => { camera.position.copy(HOME); controls.target.copy(target); controls.autoRotate = false; };
 
   // 円盤と表の行を、互いに強調する
