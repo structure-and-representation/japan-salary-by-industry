@@ -10,6 +10,8 @@ const NOTES = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3, 784.0];
 /** 木の板を叩いたときに混ざる、高い成分の比率（木琴らしい響きになる） */
 const OVERTONE = 3.9;
 const MASTER_VOLUME = 0.5;
+/** 操作の音の高さ（Hz）。着地の音より高く、短く鳴らして区別する */
+const TAP_NOTE = 1046.5;
 /** 続けて鳴らすときの最短の間隔（秒）。一度にたくさん落ちるときに、音が団子にならないようにする */
 const MIN_GAP = 0.018;
 
@@ -20,6 +22,7 @@ export function createSound() {
   let output = null;
   let noise = null; // 叩いた瞬間の「コツッ」に使う雑音
   let lastTime = 0;
+  let lastTap = 0;
 
   function prepare() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -58,7 +61,22 @@ export function createSound() {
     oscillator.stop(when + duration + 0.02);
   }
 
+  /** 操作の音。ボタンや選択肢を操作したときの、短く軽い「コッ」 */
+  function tap() {
+    if (!enabled || !context || context.state !== 'running') return;
+    const now = context.currentTime;
+    if (now - lastTap < 0.05) return; // 1回の操作で2回鳴らさない
+    lastTap = now;
+    tone(TAP_NOTE, 0.09, 0.05, now);
+    tone(TAP_NOTE * 1.5, 0.04, 0.03, now);
+  }
+  // ボタン、選択肢、年のスライダーの操作に音を付ける（ページごとの配線は要らない）
+  addEventListener('click', (e) => { if (e.target.closest && e.target.closest('button')) tap(); });
+  addEventListener('change', (e) => { if (e.target.matches && e.target.matches('select')) tap(); });
+  addEventListener('input', (e) => { if (e.target.matches && e.target.matches('input[type="range"]')) tap(); });
+
   return {
+    tap,
     get enabled() { return enabled; },
     setEnabled(value) {
       enabled = value;

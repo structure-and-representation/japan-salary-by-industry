@@ -71,13 +71,17 @@ async function start() {
   addLightsAndFloor(scene, 20);
   const geometry = createDiscGeometry();
   const sound = createSound();
+  // 全体表示では積み木が14個あるので、全部の円盤を鳴らすと音が多すぎる。
+  // 1つの積み木につき、下・中・上の3枚だけ鳴らす。1業種に寄っているときは全部鳴らす
+  const OVERVIEW_SOUND_EVERY = 4;
+  const land = (hit) => { if (state.focus !== null || hit.band % OVERVIEW_SOUND_EVERY === 0) sound.land(hit); };
   const stacks = industries.map((d) => {
-    const stack = createStack(geometry, { industry: d.index }, sound.land);
+    const stack = createStack(geometry, { industry: d.index }, land);
     scene.add(stack.group);
     return stack;
   });
   // 男女を並べるときに使う、もう1つの積み木（女性）。ふだんは隠しておく
-  const mate = createStack(geometry, { industry: -1 }, sound.land);
+  const mate = createStack(geometry, { industry: -1 }, land);
   mate.setVisible(false, true);
   scene.add(mate.group);
   // 積み木の置き場所。home は格子の位置、goal はいま向かっている位置（男女を並べる間は左右にずれる）
@@ -554,6 +558,7 @@ async function start() {
     writeUrl();
   }
   function setFocus(index) {
+    if (index !== state.focus) sound.tap(); // 積み木を選ぶ・全体に戻る操作の音
     // 全体に戻るときは、男女を並べるのもやめる
     update(index === null ? { focus: null, hover: null, compare: false } : { focus: index, hover: null });
     if (index === null) goHome(); else goFocus(index);
