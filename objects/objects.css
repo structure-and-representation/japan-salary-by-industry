@@ -29,7 +29,8 @@
 .frow .n{text-align:right}
 .frow.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
 /* 幅が狭いとき: 概要は左上に左寄せ、ラベルは短く */
-#focusui.narrow #fhead{text-align:left;max-width:60%}
+/* 狭い画面では、右上のボタンの下から概要を始める（長い業種名がボタンに重ならないように） */
+#focusui.narrow #fhead{text-align:left;max-width:60%;padding-top:32px}
 #focusui.narrow #fhead h2{font-size:16px}
 #focusui.narrow #fhead dl{flex-direction:row;gap:14px}
 #focusui.narrow #fhead dd{font-size:15px}
