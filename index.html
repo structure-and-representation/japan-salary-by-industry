@@ -3,12 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Google Analytics（Google タグ マネージャー経由） -->
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K84SW2VR"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  (function () {
+    const host = location.hostname;
+    const portfolio = host === 'japan-salary-by-industry.structure-and-representation.com';
+    if (!portfolio && host !== 'japan-salary-by-industry.visualizing.jp') return;
+
+    window.dataLayer = window.dataLayer || [];
+    if (portfolio) {
+      window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+    } else {
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+    }
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + (portfolio ? 'GTM-55W4KMR6' : 'GTM-K84SW2VR');
+    document.head.appendChild(script);
+  })();
 </script>
 <title>業種によって給与レンジはどのくらい異なるのか？</title>
 <meta name="description" content="日本の14業種の給与レンジの構成を、台の上に並べた積み木のような立体で見比べる可視化。国税庁「民間給与実態統計調査」2014〜2024年分。">

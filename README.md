@@ -53,7 +53,7 @@
 | `vendor/` | 同梱している D3 v7.9.0 と Three.js r170 |
 | `og-image.png`、`favicon.svg` | 共有時のサムネイル画像と、タブのアイコン |
 
-ビルドは不要です。表示に必要なファイルはすべてこのリポジトリにあり、書体は端末のものを使います。外部から読み込むのは、アクセス解析用の Google タグ マネージャー（`GTM-K84SW2VR`）だけです。タグは `index.html`・`object/index.html`・`2d/index.html` の `<head>` にあります。ES モジュールと `fetch` を使っているので、手元で開くときはファイルを直接開かず、簡易サーバーを立ててください。
+ビルドは不要です。表示に必要なファイルはすべてこのリポジトリにあり、書体は端末のものを使います。外部から読み込むのは、アクセス解析用の Google タグ マネージャーだけです。ポートフォリオの専用ドメインは共通コンテナ `GTM-55W4KMR6`、既存の `japan-salary-by-industry.visualizing.jp` は `GTM-K84SW2VR` を読み込みます。プレビューでは起動しません。タグは `index.html`・`object/index.html`・`2d/index.html` の `<head>` にあります。ES モジュールと `fetch` を使っているので、手元で開くときはファイルを直接開かず、簡易サーバーを立ててください。
 
 ```
 npm run serve   # http://localhost:8000/
